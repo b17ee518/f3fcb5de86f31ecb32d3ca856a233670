@@ -49,3 +49,4 @@ debug/
 release/
 *.suo
 *.user
+*.TMP

@@ -52,6 +52,7 @@ public:
     QSpacerItem *horizontalSpacer_7;
     QPushButton *closeButton;
     LyricFrame *lyricFrame;
+    QVBoxLayout *verticalLayout_2;
 
     void setupUi(QMainWindow *MainWindow)
     {
@@ -209,6 +210,11 @@ public:
         lyricFrame->setObjectName(QStringLiteral("lyricFrame"));
         lyricFrame->setFrameShape(QFrame::StyledPanel);
         lyricFrame->setFrameShadow(QFrame::Raised);
+        verticalLayout_2 = new QVBoxLayout(lyricFrame);
+        verticalLayout_2->setSpacing(0);
+        verticalLayout_2->setContentsMargins(11, 11, 11, 11);
+        verticalLayout_2->setObjectName(QStringLiteral("verticalLayout_2"));
+        verticalLayout_2->setContentsMargins(0, 0, 0, 0);
 
         verticalLayout->addWidget(lyricFrame);
 

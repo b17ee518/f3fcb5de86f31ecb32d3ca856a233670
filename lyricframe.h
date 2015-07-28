@@ -3,6 +3,11 @@
 
 #include <QFrame>
 #include <QSizeGrip>
+#include <QList>
+#include <QElapsedTimer>
+
+#include "sentenceholder.h"
+#include <QVBoxLayout>
 
 class LyricFrame : public QFrame
 {
@@ -14,12 +19,16 @@ public:
 
 	void setMoveHandlingWidget(QWidget *pw);
 	void stopMoving();
+
+	void setMaxSentences(int count);
 	
 protected:
 	void mousePressEvent(QMouseEvent *e) override;
 	void mouseReleaseEvent(QMouseEvent *e) override;
 
 	void resizeEvent(QResizeEvent *e) override;
+
+	void showEvent(QShowEvent *e) override;
 
 private:
 	bool _bMoving = false;
@@ -30,8 +39,16 @@ private:
 	QSizeGrip* _pSizeGripLB = NULL;
 	QSizeGrip* _pSizeGripRB = NULL;
 
+	QList<SentenceHolder*> _sentences;
+
+	QTimer* _updateTimer = NULL;
+	QElapsedTimer* _elapsedTimer = NULL;
+
+	QVBoxLayout * _layout = NULL;
+
 private slots:
 	void slotMovingUpdateTimer();
+	void slotOnUpdateTimer();
 };
 
 #endif // LYRICFRAME_H

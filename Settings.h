@@ -26,6 +26,7 @@ public:
 public:
 	inline qreal fontSize(){ return _fontSize; }
 	inline qreal rubyFontSize(){ return _fontSize*rubyFontScale; }
+	inline qreal rubyVSpace(){ return _fontSize*rubyVSpaceScale; }
 
 	inline const QString& fontName(){ return _fontName; }
 
@@ -34,6 +35,7 @@ public:
 public:
 	const qreal rubyFontScale = 0.35;
 	const qreal verticalSpace = 10.0;
+	const qreal rubyVSpaceScale = 0.08;
 
 private:
 	qreal _fontSize = 40.0;

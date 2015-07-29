@@ -21,7 +21,14 @@ void Settings::setFontSize(qreal fontSize)
 
 void Settings::setFontSizeBySentenceHight(qreal height)
 {
-	setFontSize(height - verticalSpace * 2);
+	qreal availableHeight = height - verticalSpace*2.0;
+
+	qreal scaleDown = 1.0 + rubyFontScale + rubyVSpaceScale;
+	if (scaleDown < 1.0)
+	{
+		scaleDown = 1.0;
+	}
+	setFontSize(availableHeight / scaleDown);
 }
 
 void Settings::setFont(const QString& fontName)

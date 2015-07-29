@@ -3,6 +3,8 @@
 
 #include "lyricframe.h"
 
+#include "helperkaraokelabel.h"
+#include "karaokeword.h"
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)

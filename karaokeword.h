@@ -48,6 +48,8 @@ private:
 	QList<RubyChar> _rubyList;
 
 	qreal _proportion = 0.0;
+
+	bool _locked = false;
 	
 };
 

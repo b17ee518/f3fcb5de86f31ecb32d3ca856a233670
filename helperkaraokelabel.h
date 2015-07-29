@@ -16,12 +16,18 @@ public:
 
 protected:
 	void paintEvent(QPaintEvent *e) override;
+
+private:
+	qreal shadowDepth();
 	
 private:
 	QColor _textColor;
 	QColor _strokeColor;
 
 	qreal _rubyOffset = 0.0;
+	bool _isRuby = false;
+
+	const qreal shadowDepthScale = 0.06;
 	
 };
 

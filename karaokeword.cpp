@@ -17,6 +17,9 @@
 KaraokeWord::KaraokeWord(QWidget *parent)
 	: QWidget(parent)
 {
+	this->setAttribute(Qt::WA_TransparentForMouseEvents);
+	this->setAutoFillBackground(false);
+	this->setAttribute(Qt::WA_TranslucentBackground);
 }
 
 KaraokeWord::~KaraokeWord()
@@ -78,6 +81,18 @@ void KaraokeWord::act(qint64 curMS)
 		}
 		else
 		{
+			int section = _rubyList.size();
+			qreal prop = 0;
+			for (int i = 0; i < section; i++)
+			{
+				if (curMS >= _rubyList[i].endMS())
+				{
+					prop = (qreal)i/(qreal)section;
+					continue;
+				}
+				prop += (qreal)(curMS - _rubyList[i].beginMS()) / (qreal)(_rubyList[i].endMS() - _rubyList[i].beginMS()) / (qreal)section;
+			}
+			updateProportion(prop);
 		}
 	}
 }
@@ -126,6 +141,7 @@ void KaraokeWord::paintEvent(QPaintEvent * e)
 		QRect postRect = QRect(w*_proportion, 0, w*(1 - _proportion), h);
 
 		QPainter painter(this);
+
 		if (_proportion > 0)
 		{
 			painter.drawImage(preRect, *_pre, preRect);
@@ -134,8 +150,7 @@ void KaraokeWord::paintEvent(QPaintEvent * e)
 		{
 			painter.drawImage(postRect, *_post, postRect);
 		}
-
-		qDebug("drawing");
+		
 	}
 }
 
@@ -150,14 +165,18 @@ void KaraokeWord::BuildWord()
 	{
 		return;
 	}
-	this->setAutoFillBackground(false);
-	this->setAttribute(Qt::WA_TranslucentBackground);
+	if (_locked)
+	{
+		return;
+	}
+	_locked = true;
 
 	HelperKaraokeLabel * label = new HelperKaraokeLabel(this);
 
 	QSize size = label->RenderToImage(&_pre, _lyric, _rubyList, Qt::red, Qt::white);
 	label->RenderToImage(&_post, _lyric, _rubyList, Qt::white, Qt::black);
 	this->setFixedSize(size);
+	_locked = false;
 }
 
 void KaraokeWord::ClearPixmap()

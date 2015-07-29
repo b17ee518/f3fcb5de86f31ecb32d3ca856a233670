@@ -11,6 +11,9 @@ SentenceHolder::SentenceHolder(QWidget *parent)
 	_layout->setSpacing(0);
 //	_layout->setContentsMargins(0, 0, 0, 0);
 	_layout->setAlignment(Qt::AlignLeft);
+
+	this->setAutoFillBackground(false);
+	this->setAttribute(Qt::WA_TranslucentBackground);
 }
 
 SentenceHolder::~SentenceHolder()

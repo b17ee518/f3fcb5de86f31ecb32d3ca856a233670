@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<song>
+    <info>
+        <name>
+            A Song
+        </name>
+        <singer>
+            Person
+        </singer>
+        <description>
+            Description
+        </description>
+    </info>
+    <general>
+        <maxline>2</maxline>
+    </general>
+    <lyric>
+        <!-- full -->
+        <sentence>
+            <line>0</line>
+            <color>0</color>
+            <birth>1000</birth>
+            <duration>8000</duration>
+            <word>
+                <text>AAAAAA</text>
+                <ruby>
+                    <text>a</text>
+                    <birth>3000</birth>
+                    <duration>1000</duration>
+                </ruby>
+                <ruby>
+                    <text>b</text>
+                    <birth>4500</birth>
+                    <duration>1000</duration>
+                </ruby>
+                <ruby>
+                    <text>c</text>
+                    <birth>6000</birth>
+                    <duration>1000</duration>
+                </ruby>
+                <color>1</color>
+                <!-- overrides -->
+                <birth>3000</birth>
+                <duration>8000</duration>
+            </word>
+            <word>
+                <text>BBB</text>
+                <color>2</color>
+                <!-- overrides -->
+                <birth>9000</birth>
+                <duration>2000</duration>
+            </word>
+        </sentence>
+        <!-- minimum -->
+        <sentence>
+            <line>1</line>
+            <word>
+                <text>CCCC</text>
+                <ruby>
+                    <text>e</text>
+                    <duration>1000</duration>
+                </ruby>
+                <ruby>
+                    <text>f</text>
+                    <duration>1000</duration>
+                </ruby>
+                <ruby>
+                    <text>g</text>
+                </ruby>
+                <birth>10000</birth>
+                <duration>3000</duration>
+            </word>
+            <word>
+                <text>DDDD</text>
+                <duration>3000</duration>
+            </word>
+        </sentence>
+    </lyric>
+</song>

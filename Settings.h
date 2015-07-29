@@ -14,14 +14,16 @@ private:
 
 public:
 	static Settings* getInstance() {
-		static Settings settings;
-		return &settings;
+		static Settings instance;
+		return &instance;
 	}
 
 public:
 	void setFontSize(qreal fontSize);
 	void setFontSizeBySentenceHight(qreal height);
 	void setFont(const QString& fontName);
+
+	qreal minimumHeightForLine(int line);
 
 public:
 	inline qreal fontSize(){ return _fontSize; }
@@ -32,13 +34,18 @@ public:
 
 	inline qreal sentenceHight(){ return _fontSize + verticalSpace * 2; }
 
+	inline qreal majorScale(){ return _fontSize / standardFontSize; }
+	inline qreal standardBeginMarginSpaceForRightAlignedSentence(){ return standardFontSize*beginMarginSpaceChar; }
+
 public:
 	const qreal rubyFontScale = 0.35;
 	const qreal verticalSpace = 10.0;
 	const qreal rubyVSpaceScale = 0.08;
+	const qreal standardFontSize = 40.0;
+	const int beginMarginSpaceChar = 3;
 
 private:
-	qreal _fontSize = 40.0;
+	qreal _fontSize = standardFontSize;
 	QString _fontName = "MS PGothic";
 
 

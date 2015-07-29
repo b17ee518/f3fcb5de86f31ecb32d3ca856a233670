@@ -21,6 +21,8 @@ public:
 	void stopMoving();
 
 	void setMaxSentences(int count);
+
+	void BuildByXML();
 	
 protected:
 	void mousePressEvent(QMouseEvent *e) override;

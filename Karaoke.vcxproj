@@ -175,6 +175,7 @@
     <ClCompile Include="helperkaraokelabel.cpp" />
     <ClCompile Include="karaokeword.cpp" />
     <ClCompile Include="lyricframe.cpp" />
+    <ClCompile Include="lyricXML.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mainwindow.cpp" />
     <ClCompile Include="RubyChar.cpp" />
@@ -216,6 +217,7 @@ endlocal
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeneratedFiles\ui_mainwindow.h" />
+    <ClInclude Include="lyricXML.h" />
     <CustomBuild Include="RubyChar.h">
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
       </Message>

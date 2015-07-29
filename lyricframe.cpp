@@ -8,6 +8,7 @@
 #include "Settings.h"
 
 #include "karaokeword.h"
+#include "LyricXML.h"
 
 #define SIZEGRIP_SIZE	10
 #define UPDATE_INTERVAL	16
@@ -60,7 +61,50 @@ void LyricFrame::setMaxSentences(int count)
 			auto sentence = new SentenceHolder(this);
 			_sentences.append(sentence);
 			_layout->addWidget(sentence);
-			sentence->setDirection(i % 2);
+			if (i == count - 1)
+			{
+				// last sentence always right align
+				sentence->setDirection(DIRECTION_RIGHT);
+			}
+			else
+			{
+				if (i%2 == 0)
+				{
+					// line 1 3 5 ~
+					sentence->setDirection(DIRECTION_LEFT);
+				}
+				else
+				{
+					// line 2 4 6 ~
+					sentence->setDirection(DIRECTION_RIGHT);
+					sentence->setBeginMarginSpace(Settings::getInstance()->standardBeginMarginSpaceForRightAlignedSentence());
+				}
+			}
+		}
+		this->setMinimumHeight(Settings::getInstance()->minimumHeightForLine(count));
+	}
+}
+
+void LyricFrame::BuildByXML()
+{
+	auto song = LyricXML::getInstance()->song();
+	setMaxSentences(song.general.maxline);
+	Q_FOREACH(auto sentence, song.lyric.sentencelist)
+	{
+		Q_FOREACH(auto word, sentence.wordlist)
+		{
+			auto kw = new KaraokeWord(NULL);
+			kw->setLyric(word.text);
+			kw->setBeginEnd(word.birth, word.birth + word.duration);
+			if (!word.rubylist.empty())
+			{
+				Q_FOREACH(auto ruby, word.rubylist)
+				{
+					kw->addRubyChar(ruby.text, ruby.birth, ruby.birth + ruby.duration);
+				}
+			}
+			//kw->setTextColor()
+			_sentences[sentence.line]->addWord(kw);
 		}
 	}
 }
@@ -116,17 +160,37 @@ void LyricFrame::showEvent(QShowEvent *e)
 	static bool bInited = false;
 	if (!bInited)
 	{
-		for (int i = 0; i < 10; i++)
+		BuildByXML();
+		/*
+//		_sentences[1]->setBeginMarginSpace(40);
+		for (int j = 0; j < 3;j++)
 		{
-			auto word = new KaraokeWord(NULL);
-			word->setLyric(QString::fromLocal8Bit("‹Å"));
-			word->addRubyChar(QString::fromLocal8Bit("‚ "), i * 1000, i * 1000 + 150);
-			word->addRubyChar(QString::fromLocal8Bit("‚©"), i * 1000+150, i * 1000 + 450);
-			word->addRubyChar(QString::fromLocal8Bit("‚Â"), i * 1000+450, i * 1000 + 850);
-			word->addRubyChar(QString::fromLocal8Bit("‚«"), i * 1000+850, i * 1000 + 1000);
-//			word->setBeginEnd(i * 1000, (i + 1) * 1000);
-			_sentences[0]->addWord(word);
+			for (int i = 0; i < 2; i++)
+			{
+				auto word = new KaraokeWord(NULL);
+				word->setLyric(QString::fromLocal8Bit("Šó"));
+				//				word->setRubyHidden(true);
+				int wordlength = 6000;
+				word->addRubyChar(QString::fromLocal8Bit("‚«"), i * wordlength, i * wordlength + 1000);
+				word->addRubyChar(QString::fromLocal8Bit("‚Ú"), i * wordlength + 1000, i * wordlength + 2000);
+				word->addRubyChar(QString::fromLocal8Bit("‚¤"), i * wordlength + 2000, (i + 1) * wordlength);
+				//			word->setBeginEnd(i * 1000, (i + 1) * 1000);
+				_sentences[j]->addWord(word);
+			}
+			for (int i = 0; i < 2; i++)
+			{
+				auto word = new KaraokeWord(NULL);
+				word->setLyric(QString::fromLocal8Bit("Šó–]"));
+				//				word->setRubyHidden(true);
+				int wordlength = 6000;
+				word->addRubyChar(QString::fromLocal8Bit("‚«"), i * wordlength, i * wordlength + 1000);
+				word->addRubyChar(QString::fromLocal8Bit("‚Ú"), i * wordlength + 1000, i * wordlength + 2000);
+				word->addRubyChar(QString::fromLocal8Bit("‚¤"), i * wordlength + 2000, (i + 1) * wordlength);
+				//			word->setBeginEnd(i * 1000, (i + 1) * 1000);
+				_sentences[j]->addWord(word);
+			}
 		}
+		*/
 	}
 }
 

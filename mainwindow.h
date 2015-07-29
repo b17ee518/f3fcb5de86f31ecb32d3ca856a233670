@@ -25,6 +25,8 @@ public:
 	void nextSong();
 	void previousSong();
 
+	bool loadXML(const QString& path);
+
 protected:
 	void enterEvent(QEvent *e) override;
 	void leaveEvent(QEvent *e) override;

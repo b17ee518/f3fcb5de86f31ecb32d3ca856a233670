@@ -43,7 +43,7 @@ QSize HelperKaraokeLabel::RenderToImage(QImage** ppimage, const QString& lyric, 
 	f.setFamily(setting->fontName());
 	f.setWeight(99);
 	f.setPixelSize(setting->fontSize());
-	f.setLetterSpacing(QFont::SpacingType::AbsoluteSpacing, 5);
+	f.setLetterSpacing(QFont::SpacingType::AbsoluteSpacing, 1);
 	setFont(f);
 	
 	// calc size
@@ -52,13 +52,14 @@ QSize HelperKaraokeLabel::RenderToImage(QImage** ppimage, const QString& lyric, 
 	//////////////////////////////////////////////////////////////////////////
 	// ruby
 	int rubyCount = ruby.size();
-	qreal maxSubW = 0.0;
-	qreal maxSubH = 0.0;
+	_maxSubW = 0.0;
+	_maxSubH = setting->rubyFontSize();
 	QList<HelperKaraokeLabel*> subList;
 	for (int i = 0; i < rubyCount; i++)
 	{
 		HelperKaraokeLabel* sub = new HelperKaraokeLabel(this);
 		sub->_isRuby = true;
+		sub->setRubyHidden(_isRubyHidden);
 		subList.append(sub);
 		sub->setText(ruby[i].ruby());
 		sub->_textColor = _textColor;
@@ -69,18 +70,21 @@ QSize HelperKaraokeLabel::RenderToImage(QImage** ppimage, const QString& lyric, 
 		f.setFamily(setting->fontName());
 		f.setWeight(99);
 		f.setPixelSize(setting->rubyFontSize());
-		f.setLetterSpacing(QFont::SpacingType::AbsoluteSpacing, 3);
+		f.setLetterSpacing(QFont::SpacingType::AbsoluteSpacing, 1);
 		sub->setFont(f);
 
 		auto subsize = sub->minimumSizeHint();
-		if (maxSubW < subsize.width())
+		if (_maxSubW < subsize.width())
 		{
-			maxSubW = subsize.width();
+			_maxSubW = subsize.width();
 		}
-		if (maxSubH < subsize.height())
+		// should be even!!
+		/*
+		if (_maxSubH < subsize.height())
 		{
-			maxSubH = subsize.height();
-		}
+			_maxSubH = subsize.height();
+		}*/
+		
 
 		/*
 		auto geo = sub->geometry();
@@ -90,27 +94,30 @@ QSize HelperKaraokeLabel::RenderToImage(QImage** ppimage, const QString& lyric, 
 	}
 
 	// rearrange size
+	_maxSubH += 1.0; // shadow
+	size.setHeight(size.height() + _maxSubH + setting->rubyVSpace());
 	if (rubyCount > 0)
 	{
 		qreal subSpaceW = 0.0;
-		maxSubH += 1.0; // shadow
-		maxSubW += subSpaceW;
+		_maxSubW += subSpaceW;
 
-		qreal subTotalW = maxSubW*rubyCount - subSpaceW;
+		qreal subTotalW = _maxSubW*rubyCount - subSpaceW;
 		_rubyOffset = (size.width() - subTotalW) / 2.0;
 
 		if (size.width() < subTotalW)
 		{
-			size.setWidth(maxSubW*rubyCount-subSpaceW);
+			size.setWidth(_maxSubW*rubyCount-subSpaceW);
 		}
-		qreal subSpaceH = 4.0;
-		size.setHeight(size.height() + maxSubH);
+		else
+		{
+			_maxSubW = size.width() / rubyCount;
+		}
 
 		for (int i = 0; i < rubyCount; i++)
 		{
-			subList[i]->setFixedSize(QSize(maxSubW, maxSubH));
+			subList[i]->setFixedSize(QSize(_maxSubW, _maxSubH+setting->rubyVSpace()));
 			auto geo = subList[i]->geometry();
-			geo.setX(geo.x() + i*maxSubW + (_rubyOffset>0?_rubyOffset:0));
+			geo.setX(geo.x() + i*_maxSubW + (_rubyOffset>0?_rubyOffset/2:0));
 			subList[i]->setGeometry(geo);
 		}
 		/*
@@ -136,13 +143,23 @@ QSize HelperKaraokeLabel::RenderToImage(QImage** ppimage, const QString& lyric, 
 	return size;
 }
 
+void HelperKaraokeLabel::setRubyHidden(bool bHidden)
+{
+	_isRubyHidden = bHidden;
+}
+
 void HelperKaraokeLabel::paintEvent(QPaintEvent *e)
 {
 //	QLabel::paintEvent(e);
 
+	if (_isRuby && _isRubyHidden)
+	{
+		return;
+	}
+
 	auto size = this->sizeHint();
 	auto setting = Settings::getInstance();
-	qreal y = size.height() + (_isRuby ? 0 : (setting->rubyFontSize() - setting->verticalSpace));
+	qreal y = size.height() + (_isRuby ? (0) : (_maxSubH/*setting->rubyFontSize()*/ /*+ setting->rubyVSpace()*/ - setting->verticalSpace)) ;
 
 	QPainter painter(this);
 

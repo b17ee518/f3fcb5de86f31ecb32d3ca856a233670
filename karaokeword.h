@@ -15,11 +15,13 @@ public:
 	~KaraokeWord();
 
 	void setLyric(const QString& lyric);
+	void setTextColor(const QColor& preTextColor, const QColor& preStrokeColor, const QColor& postTextColor, const QColor& postStrokeColor);
 	void setBeginEnd(qint64 beginMS, qint64 endMS);
 
 	void act(qint64 curMS);
 
 	void addRubyChar(const QString& rubyText, qint64 beginMS, qint64 endMS);
+	void setRubyHidden(bool bHidden);
 
 	void rebuild();
 
@@ -45,9 +47,17 @@ private:
 	QImage * _pre = NULL;
 	QImage * _post = NULL;
 
+	QColor _preTextColor = Qt::white;
+	QColor _preStrokeColor = Qt::black;
+	QColor _postTextColor = Qt::red;
+	QColor _postStrokeColor = Qt::white;
+
 	QList<RubyChar> _rubyList;
 
 	qreal _proportion = 0.0;
+	qreal _rubyOffset = 0.0;
+
+	bool _isRubyHidden = false;
 
 	bool _locked = false;
 	

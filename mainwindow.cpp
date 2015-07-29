@@ -5,6 +5,9 @@
 
 #include "helperkaraokelabel.h"
 #include "karaokeword.h"
+
+#include "LyricXML.h"
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -15,6 +18,9 @@ MainWindow::MainWindow(QWidget *parent) :
     setWindowFlags(Qt::FramelessWindowHint);
 
 	ui->lyricFrame->setMoveHandlingWidget(this);
+
+	//
+	loadXML("e:/Karaoke/f3fcb5de86f31ecb32d3ca856a233670/resource/test.xml");
 }
 
 MainWindow::~MainWindow()
@@ -60,6 +66,11 @@ void MainWindow::nextSong()
 void MainWindow::previousSong()
 {
 
+}
+
+bool MainWindow::loadXML(const QString& path)
+{
+	return LyricXML::getInstance()->loadXML(path);
 }
 
 void MainWindow::enterEvent(QEvent *e)

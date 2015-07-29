@@ -2,6 +2,7 @@
 #include "karaokeword.h"
 
 #include <QHBoxLayout>
+#include "Settings.h"
 
 SentenceHolder::SentenceHolder(QWidget *parent)
 	: QFrame(parent)
@@ -11,6 +12,9 @@ SentenceHolder::SentenceHolder(QWidget *parent)
 	_layout->setSpacing(0);
 //	_layout->setContentsMargins(0, 0, 0, 0);
 	_layout->setAlignment(Qt::AlignLeft);
+	
+	_horizontalSpacer = new QSpacerItem(0, 0);
+	_layout->addSpacerItem(_horizontalSpacer);
 
 	this->setAutoFillBackground(false);
 	this->setAttribute(Qt::WA_TranslucentBackground);
@@ -24,7 +28,34 @@ SentenceHolder::~SentenceHolder()
 void SentenceHolder::addWord(KaraokeWord* word)
 {
 	word->setParent(this);
-	_layout->addWidget(word);
+	if (_direction == DIRECTION_LEFT)
+	{
+		_layout->addWidget(word);
+	}
+	else
+	{
+		int index = _layout->count()-1;
+		_layout->insertWidget(index, word);
+	}
+}
+
+void SentenceHolder::clearSentence()
+{
+	QObjectList copiedChildren = children();
+	Q_FOREACH(auto item, copiedChildren)
+	{
+		KaraokeWord *word = dynamic_cast<KaraokeWord *>(item);
+		if (NULL != word)
+		{
+			delete word;
+		}
+	}
+}
+
+void SentenceHolder::setBeginMarginSpace(qreal space)
+{
+	_beginMarginSpace = space;
+	_horizontalSpacer->changeSize(_beginMarginSpace*Settings::getInstance()->majorScale(), 0);
 }
 
 void SentenceHolder::setDirection(int dir)
@@ -61,5 +92,9 @@ void SentenceHolder::settingsChanged()
 		{
 			karaoke->rebuild();
 		}
+	}
+	if (_beginMarginSpace != 0.0)
+	{
+		_horizontalSpacer->changeSize(_beginMarginSpace*Settings::getInstance()->majorScale(), 0);
 	}
 }

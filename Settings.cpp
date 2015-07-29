@@ -39,3 +39,9 @@ void Settings::setFont(const QString& fontName)
 		emit sigFontChanged();
 	}
 }
+
+qreal Settings::minimumHeightForLine(int line)
+{
+	qreal oneLine = standardFontSize * (1.0 + rubyFontScale + rubyVSpaceScale) + verticalSpace * 2;
+	return oneLine*line;
+}

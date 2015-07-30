@@ -41,8 +41,7 @@ void SentenceHolder::addWord(KaraokeWord* word)
 
 void SentenceHolder::clearSentence()
 {
-	QObjectList copiedChildren = children();
-	Q_FOREACH(auto item, copiedChildren)
+	Q_FOREACH(auto item, children())
 	{
 		KaraokeWord *word = dynamic_cast<KaraokeWord *>(item);
 		if (NULL != word)

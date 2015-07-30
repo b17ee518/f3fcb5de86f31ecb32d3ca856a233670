@@ -49,8 +49,8 @@ public:
 	}
 
 	QString text;
-	qint64 birth = -1;
-	qint64 duration = -1;
+	qint64 birth = -1;	// done
+	qint64 duration = -1;	// no birth no duration OR all but last duration set
 };
 
 class KXMLWord
@@ -65,13 +65,15 @@ public:
 		color = -1;
 		birth = -1;
 		duration = -1;
+		rubyhidden = 0;
 		rubylist.clear();
 	}
 
 	QString text;
-	int color = -1;
-	qint64 birth = -1;
-	qint64 duration = -1;
+	int color = -1;	// done
+	qint64 birth = -1;	// first must, done
+	qint64 duration = -1;	// must set
+	int rubyhidden = 0;	// no need to care
 	QList<KXMLRuby> rubylist;
 };
 
@@ -88,12 +90,19 @@ public:
 		birth = -1;
 		duration = -1;
 		wordlist.clear();
+
+		_birthCalc = -1;
+		_durationCalc = -1;
 	}
 
-	int line = 0;
-	int color = -1;
-	qint64 birth = -1;
-	qint64 duration = -1;
+	int line = -1;	// done
+	int color = -1;	// done
+	qint64 birth = -1;	// last step
+	qint64 duration = -1;	// last step
+
+	qint64 _birthCalc = -1;
+	qint64 _durationCalc = -1;
+
 	QList<KXMLWord> wordlist;
 };
 
@@ -129,9 +138,20 @@ public:
 	KXMLLyric lyric;
 };
 
+
 class LyricXML
 {
 private:
+
+	class ParagraphData
+	{
+	public:
+		ParagraphData(){}
+
+		qint64 birth = 0;
+		qint64 duration = 0;
+	};
+
 	LyricXML();
 	LyricXML(LyricXML const&);
 	LyricXML& operator=(LyricXML const&);
@@ -149,6 +169,7 @@ public:
 
 private:
 	void prepare();
+	KXMLSentence buildEmptyLine(int lineNum);
 
 public:
 	QString subTextForElem(const QDomElement& elem, const QString& name);

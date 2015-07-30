@@ -93,6 +93,10 @@ void KaraokeWord::act(qint64 curMS)
 			qreal prop = 0;
 			for (int i = 0; i < section; i++)
 			{
+				if (curMS < _rubyList[i].beginMS())
+				{
+					continue;
+				}
 				if (curMS >= _rubyList[i].endMS())
 				{
 					prop = (qreal)(i+1)/(qreal)section;
@@ -102,7 +106,7 @@ void KaraokeWord::act(qint64 curMS)
 			}
 			if (_rubyOffset > 0)
 			{
-				prop += (_rubyOffset/2 / size().width());
+				prop += (_rubyOffset / size().width());
 			}
 			updateProportion(prop);
 		}
@@ -144,20 +148,20 @@ void KaraokeWord::rebuild()
 	repaint();
 }
 
-QSize KaraokeWord::boundingBoxSize()
+QSizeF KaraokeWord::boundingBoxSize()
 {
 	if (_pre)
 	{
 		return _pre->size();
 	}
-	return QSize();
+	return QSizeF();
 }
 
 void KaraokeWord::paintEvent(QPaintEvent * e)
 {
 	if (_pre && _post)
 	{
-		auto size = boundingBoxSize();
+		QSizeF size = boundingBoxSize();
 
 		auto w = size.width();
 		auto h = size.height();
@@ -201,9 +205,9 @@ void KaraokeWord::BuildWord()
 
 	HelperKaraokeLabel * label = new HelperKaraokeLabel(this);
 	label->setRubyHidden(_isRubyHidden);
-	QSize size = label->RenderToImage(&_pre, _lyric, _rubyList, _preTextColor, _preStrokeColor);
+	QSizeF size = label->RenderToImage(&_pre, _lyric, _rubyList, _preTextColor, _preStrokeColor);
 	label->RenderToImage(&_post, _lyric, _rubyList, _postTextColor, _postStrokeColor);
-	this->setFixedSize(size);
+	this->setFixedSize(size.toSize());
 	_rubyOffset = label->rubyOffset();
 	_locked = false;
 }

@@ -12,7 +12,7 @@ public:
 	HelperKaraokeLabel(QWidget *parent);
 	~HelperKaraokeLabel();
 
-	QSize RenderToImage(QImage** pixmap, const QString& lyric, QList<RubyChar>& ruby, const QColor& textCol, const QColor& strokeColor);
+	QSizeF RenderToImage(QImage** pixmap, const QString& lyric, QList<RubyChar>& ruby, const QColor& textCol, const QColor& strokeColor);
 
 	void setRubyHidden(bool bHidden);
 

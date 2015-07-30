@@ -25,7 +25,7 @@ public:
 
 	void rebuild();
 
-	QSize boundingBoxSize();
+	QSizeF boundingBoxSize();
 
 protected:
 	void paintEvent(QPaintEvent * e) override;

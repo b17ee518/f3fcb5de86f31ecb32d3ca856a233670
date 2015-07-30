@@ -12,67 +12,35 @@
         </description>
     </info>
     <general>
-        <maxline>2</maxline>
+        <maxline>4</maxline>
     </general>
     <lyric>
-        <!-- full -->
         <sentence>
-            <line>0</line>
-            <color>0</color>
-            <birth>1000</birth>
-            <duration>8000</duration>
             <word>
-                <text>AAAAAA</text>
-                <ruby>
-                    <text>a</text>
-                    <birth>3000</birth>
-                    <duration>1000</duration>
-                </ruby>
-                <ruby>
-                    <text>b</text>
-                    <birth>4500</birth>
-                    <duration>1000</duration>
-                </ruby>
-                <ruby>
-                    <text>c</text>
-                    <birth>6000</birth>
-                    <duration>1000</duration>
-                </ruby>
-                <color>1</color>
-                <!-- overrides -->
-                <birth>3000</birth>
-                <duration>8000</duration>
-            </word>
-            <word>
-                <text>BBB</text>
-                <color>2</color>
-                <!-- overrides -->
-                <birth>9000</birth>
-                <duration>2000</duration>
+                <text>0001</text>
+                <birth>0000</birth>
+                <duration>5000</duration>
             </word>
         </sentence>
-        <!-- minimum -->
         <sentence>
-            <line>1</line>
             <word>
-                <text>CCCC</text>
-                <ruby>
-                    <text>e</text>
-                    <duration>1000</duration>
-                </ruby>
-                <ruby>
-                    <text>f</text>
-                    <duration>1000</duration>
-                </ruby>
-                <ruby>
-                    <text>g</text>
-                </ruby>
-                <birth>10000</birth>
-                <duration>3000</duration>
+                <text>0002</text>
+                <birth>5000</birth>
+                <duration>5000</duration>
             </word>
+        </sentence>
+        <sentence>
             <word>
-                <text>DDDD</text>
-                <duration>3000</duration>
+                <text>0003</text>
+                <birth>15000</birth>
+                <duration>5000</duration>
+            </word>
+        </sentence>
+        <sentence>
+            <word>
+                <text>0004</text>
+                <birth>20000</birth>
+                <duration>5000</duration>
             </word>
         </sentence>
     </lyric>

@@ -21,7 +21,7 @@ void RubyChar::setRuby(const QString& ruby, qint64 beginMS, qint64 endMS)
 	}
 }
 
-void RubyChar::setRenderSize(const QSize& size)
+void RubyChar::setRenderSize(const QSizeF& size)
 {
 	_renderSize = size;
 }

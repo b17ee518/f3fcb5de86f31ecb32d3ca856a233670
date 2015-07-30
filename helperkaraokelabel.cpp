@@ -17,11 +17,11 @@ HelperKaraokeLabel::~HelperKaraokeLabel()
 
 }
 
-QSize HelperKaraokeLabel::RenderToImage(QImage** ppimage, const QString& lyric, QList<RubyChar>& ruby, const QColor& textCol, const QColor& strokeColor)
+QSizeF HelperKaraokeLabel::RenderToImage(QImage** ppimage, const QString& lyric, QList<RubyChar>& ruby, const QColor& textCol, const QColor& strokeColor)
 {
 	if (!ppimage)
 	{
-		return QSize();
+		return QSizeF();
 	}
 	auto pimage = *ppimage;
 	if (pimage)
@@ -47,7 +47,7 @@ QSize HelperKaraokeLabel::RenderToImage(QImage** ppimage, const QString& lyric, 
 	setFont(f);
 	
 	// calc size
-	auto size = minimumSizeHint();
+	QSizeF size = minimumSizeHint();
 
 	//////////////////////////////////////////////////////////////////////////
 	// ruby
@@ -73,7 +73,7 @@ QSize HelperKaraokeLabel::RenderToImage(QImage** ppimage, const QString& lyric, 
 		f.setLetterSpacing(QFont::SpacingType::AbsoluteSpacing, 1);
 		sub->setFont(f);
 
-		auto subsize = sub->minimumSizeHint();
+		QSizeF subsize = sub->minimumSizeHint();
 		if (_maxSubW < subsize.width())
 		{
 			_maxSubW = subsize.width();
@@ -84,40 +84,50 @@ QSize HelperKaraokeLabel::RenderToImage(QImage** ppimage, const QString& lyric, 
 		{
 			_maxSubH = subsize.height();
 		}*/
-		
-
-		/*
-		auto geo = sub->geometry();
-		geo.setX(geo.x() + i*size.width() / rubyCount);
-		sub->setGeometry(geo);
-		*/
 	}
 
 	// rearrange size
 	_maxSubH += 1.0; // shadow
+
+	//  /--/                // _rubyOffset > 0
+	//      /<--->/      // _maxSubW
+	//  |--|a|----|b|----|c|--|
+	//  AAAAAAAAAAAAAAAAA
+
+	//
+	// |a|b|c|
+	//	---A---
+	// /--/                // _rubyOffset < 0
+
 	size.setHeight(size.height() + _maxSubH + setting->rubyVSpace());
 	if (rubyCount > 0)
 	{
-		qreal subSpaceW = 0.0;
-		_maxSubW += subSpaceW;
+		qreal subTotalW = _maxSubW*rubyCount;
+		qreal oWidth = size.width();
 
-		qreal subTotalW = _maxSubW*rubyCount - subSpaceW;
-		_rubyOffset = (size.width() - subTotalW) / 2.0;
-
-		if (size.width() < subTotalW)
+		if (oWidth < subTotalW)
 		{
-			size.setWidth(_maxSubW*rubyCount-subSpaceW);
+			size.setWidth(_maxSubW*rubyCount);
+			_rubyOffset = (oWidth - subTotalW) / 2.0;
 		}
 		else
 		{
-			_maxSubW = size.width() / rubyCount;
+			auto oMaxSubW = _maxSubW;
+			/*
+			_maxSubW = ((qreal)(oWidth)) / rubyCount;
+			_rubyOffset = oMaxSubW/2;
+			*/
+			_rubyOffset = (oWidth - rubyCount*oMaxSubW) / rubyCount / 2.0;
+			_maxSubW = oMaxSubW + _rubyOffset * 2.0;
 		}
 
 		for (int i = 0; i < rubyCount; i++)
 		{
 			subList[i]->setFixedSize(QSize(_maxSubW, _maxSubH+setting->rubyVSpace()));
+			subList[i]->_maxSubW = _maxSubW;
+			subList[i]->_maxSubH = _maxSubH;
 			auto geo = subList[i]->geometry();
-			geo.setX(geo.x() + i*_maxSubW + (_rubyOffset>0?_rubyOffset/2:0));
+			geo.setX(geo.x() + i*_maxSubW + (_rubyOffset>0 ? _rubyOffset : 0));
 			subList[i]->setGeometry(geo);
 		}
 		/*
@@ -127,11 +137,11 @@ QSize HelperKaraokeLabel::RenderToImage(QImage** ppimage, const QString& lyric, 
 		*/
 	}
 	
-	setFixedSize(size);
+	setFixedSize(size.toSize());
 
 
 	// render to image
-	pimage = new QImage(size, QImage::Format_ARGB32);
+	pimage = new QImage(size.toSize(), QImage::Format_ARGB32);
 	QPainter painter(pimage);
 	pimage->fill(qRgba(0, 0, 0, 0));
 	render(&painter, QPoint(), QRegion(), QWidget::DrawChildren);
@@ -157,9 +167,9 @@ void HelperKaraokeLabel::paintEvent(QPaintEvent *e)
 		return;
 	}
 
-	auto size = this->sizeHint();
+	QSizeF size = this->rect().size();
 	auto setting = Settings::getInstance();
-	qreal y = size.height() + (_isRuby ? (0) : (_maxSubH/*setting->rubyFontSize()*/ /*+ setting->rubyVSpace()*/ - setting->verticalSpace)) ;
+	qreal y = size.height() + (_isRuby ? (-setting->rubyVSpace()) : (-setting->verticalSpace)) -1;
 
 	QPainter painter(this);
 

@@ -96,6 +96,7 @@ void LyricFrame::BuildByXML()
 			auto kw = new KaraokeWord(NULL);
 			kw->setLyric(word.text);
 			kw->setBeginEnd(word.birth, word.birth + word.duration);
+			kw->setRubyHidden(word.rubyhidden);
 			if (!word.rubylist.empty())
 			{
 				Q_FOREACH(auto ruby, word.rubylist)

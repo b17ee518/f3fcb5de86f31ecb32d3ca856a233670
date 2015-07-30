@@ -28,7 +28,7 @@ public:
 public:
 	inline qreal fontSize(){ return _fontSize; }
 	inline qreal rubyFontSize(){ return _fontSize*rubyFontScale; }
-	inline qreal rubyVSpace(){ return _fontSize*rubyVSpaceScale; }
+	qreal rubyVSpace();
 
 	inline const QString& fontName(){ return _fontName; }
 
@@ -41,8 +41,14 @@ public:
 	const qreal rubyFontScale = 0.35;
 	const qreal verticalSpace = 10.0;
 	const qreal rubyVSpaceScale = 0.08;
+	const qreal rubyVSpaceMax = 15.0;
 	const qreal standardFontSize = 40.0;
 	const int beginMarginSpaceChar = 3;
+
+	const qint64 lyricLongFadeTimeMS = 4000;
+	const qint64 lyricShortFadeTimeMS = 2000;
+	const qint64 lyricRestIntervalMS = 200;
+//	const qreal lyricVeryShortIntervalScale = 0.1; omit now
 
 private:
 	qreal _fontSize = standardFontSize;

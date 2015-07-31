@@ -21,9 +21,14 @@ public:
 	void clearSentence();
 	void setBeginMarginSpace(qreal space);
 
+	void setClearTime(qint64 clearTime);
+
 	void setDirection(int dir);
 
 	void act(qint64 curMS);
+
+public:
+	inline qint64 clearTime(){ return _clearTime; }
 
 private:
 	QHBoxLayout * _layout = NULL;
@@ -32,6 +37,8 @@ private:
 	QSpacerItem* _horizontalSpacer = NULL;
 
 	qreal _beginMarginSpace = 0.0;
+
+	qint64 _clearTime = 0;
 	
 public slots :
 	void settingsChanged();

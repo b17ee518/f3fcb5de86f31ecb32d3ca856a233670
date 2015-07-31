@@ -37,6 +37,8 @@ public:
 	inline qreal majorScale(){ return _fontSize / standardFontSize; }
 	inline qreal standardBeginMarginSpaceForRightAlignedSentence(){ return standardFontSize*beginMarginSpaceChar; }
 
+	inline qreal minimumDuration(){ return lyricShortFadeTimeMS + lyricRestIntervalMS; }
+
 public:
 	const qreal rubyFontScale = 0.35;
 	const qreal verticalSpace = 10.0;
@@ -45,10 +47,12 @@ public:
 	const qreal standardFontSize = 40.0;
 	const int beginMarginSpaceChar = 3;
 
-	const qint64 lyricLongFadeTimeMS = 4000;
-	const qint64 lyricShortFadeTimeMS = 2000;
+	const qint64 lyricLongFadeTimeMS = 2000;
+	const qint64 lyricShortFadeTimeMS = 500;
 	const qint64 lyricRestIntervalMS = 200;
 //	const qreal lyricVeryShortIntervalScale = 0.1; omit now
+
+	const char* xmlExtention = ".xml";
 
 private:
 	qreal _fontSize = standardFontSize;

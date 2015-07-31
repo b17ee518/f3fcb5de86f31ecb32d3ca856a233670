@@ -19,11 +19,11 @@
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QPushButton>
-#include <QtWidgets/QSlider>
 #include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
-#include <lyricframe.h>
+#include "lyricframe.h"
+#include "qdirectslider.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -42,13 +42,13 @@ public:
     QPushButton *previousButton;
     QPushButton *nextButton;
     QSpacerItem *horizontalSpacer_2;
-    QSlider *positionSlider;
+    QDirectSlider *positionSlider;
     QSpacerItem *horizontalSpacer_6;
     QLabel *timeLabel;
     QSpacerItem *horizontalSpacer_5;
     QPushButton *loopSwitchButton;
     QSpacerItem *horizontalSpacer_4;
-    QSlider *volumeSlider;
+    QDirectSlider *volumeSlider;
     QSpacerItem *horizontalSpacer_7;
     QPushButton *closeButton;
     LyricFrame *lyricFrame;
@@ -90,6 +90,7 @@ public:
         listButton->setSizePolicy(sizePolicy1);
         listButton->setMinimumSize(QSize(48, 24));
         listButton->setMaximumSize(QSize(48, 24));
+        listButton->setCheckable(true);
 
         horizontalLayout->addWidget(listButton);
 
@@ -142,7 +143,7 @@ public:
 
         horizontalLayout->addItem(horizontalSpacer_2);
 
-        positionSlider = new QSlider(controlBarFrame);
+        positionSlider = new QDirectSlider(controlBarFrame);
         positionSlider->setObjectName(QStringLiteral("positionSlider"));
         positionSlider->setMinimumSize(QSize(0, 24));
         positionSlider->setMaximumSize(QSize(16777215, 24));
@@ -180,12 +181,14 @@ public:
 
         horizontalLayout->addItem(horizontalSpacer_4);
 
-        volumeSlider = new QSlider(controlBarFrame);
+        volumeSlider = new QDirectSlider(controlBarFrame);
         volumeSlider->setObjectName(QStringLiteral("volumeSlider"));
         sizePolicy1.setHeightForWidth(volumeSlider->sizePolicy().hasHeightForWidth());
         volumeSlider->setSizePolicy(sizePolicy1);
         volumeSlider->setMinimumSize(QSize(50, 24));
         volumeSlider->setMaximumSize(QSize(50, 24));
+        volumeSlider->setMaximum(100);
+        volumeSlider->setValue(10);
         volumeSlider->setOrientation(Qt::Horizontal);
 
         horizontalLayout->addWidget(volumeSlider);

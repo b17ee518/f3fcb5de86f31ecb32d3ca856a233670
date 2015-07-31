@@ -10,6 +10,8 @@
 #include "karaokeword.h"
 #include "LyricXML.h"
 
+#include "mainwindow.h"
+
 #define SIZEGRIP_SIZE	10
 #define UPDATE_INTERVAL	16
 
@@ -30,7 +32,6 @@ LyricFrame::LyricFrame(QWidget *parent)
 
 	_updateTimer = new QTimer(this);
 	_elapsedTimer = new QElapsedTimer();
-	_elapsedTimer->start();
 	connect(_updateTimer, SIGNAL(timeout()), this, SLOT(slotOnUpdateTimer()));
 	_updateTimer->start(UPDATE_INTERVAL);
 
@@ -89,25 +90,24 @@ void LyricFrame::BuildByXML()
 {
 	auto song = LyricXML::getInstance()->song();
 	setMaxSentences(song.general.maxline);
-	Q_FOREACH(auto sentence, song.lyric.sentencelist)
-	{
-		Q_FOREACH(auto word, sentence.wordlist)
-		{
-			auto kw = new KaraokeWord(NULL);
-			kw->setLyric(word.text);
-			kw->setBeginEnd(word.birth, word.birth + word.duration);
-			kw->setRubyHidden(word.rubyhidden);
-			if (!word.rubylist.empty())
-			{
-				Q_FOREACH(auto ruby, word.rubylist)
-				{
-					kw->addRubyChar(ruby.text, ruby.birth, ruby.birth + ruby.duration);
-				}
-			}
-			//kw->setTextColor()
-			_sentences[sentence.line]->addWord(kw);
-		}
-	}
+}
+
+void LyricFrame::Play()
+{
+}
+
+void LyricFrame::Pause()
+{
+}
+
+void LyricFrame::Stop()
+{
+	_previousMSec = std::numeric_limits<qint64>::min();
+}
+
+void LyricFrame::Jumped(qint64 oldPosition)
+{
+	_previousMSec = std::numeric_limits<qint64>::min();
 }
 
 void LyricFrame::mousePressEvent(QMouseEvent *event)
@@ -162,36 +162,6 @@ void LyricFrame::showEvent(QShowEvent *e)
 	if (!bInited)
 	{
 		BuildByXML();
-		/*
-//		_sentences[1]->setBeginMarginSpace(40);
-		for (int j = 0; j < 3;j++)
-		{
-			for (int i = 0; i < 2; i++)
-			{
-				auto word = new KaraokeWord(NULL);
-				word->setLyric(QString::fromLocal8Bit("Šó"));
-				//				word->setRubyHidden(true);
-				int wordlength = 6000;
-				word->addRubyChar(QString::fromLocal8Bit("‚«"), i * wordlength, i * wordlength + 1000);
-				word->addRubyChar(QString::fromLocal8Bit("‚Ú"), i * wordlength + 1000, i * wordlength + 2000);
-				word->addRubyChar(QString::fromLocal8Bit("‚¤"), i * wordlength + 2000, (i + 1) * wordlength);
-				//			word->setBeginEnd(i * 1000, (i + 1) * 1000);
-				_sentences[j]->addWord(word);
-			}
-			for (int i = 0; i < 2; i++)
-			{
-				auto word = new KaraokeWord(NULL);
-				word->setLyric(QString::fromLocal8Bit("Šó–]"));
-				//				word->setRubyHidden(true);
-				int wordlength = 6000;
-				word->addRubyChar(QString::fromLocal8Bit("‚«"), i * wordlength, i * wordlength + 1000);
-				word->addRubyChar(QString::fromLocal8Bit("‚Ú"), i * wordlength + 1000, i * wordlength + 2000);
-				word->addRubyChar(QString::fromLocal8Bit("‚¤"), i * wordlength + 2000, (i + 1) * wordlength);
-				//			word->setBeginEnd(i * 1000, (i + 1) * 1000);
-				_sentences[j]->addWord(word);
-			}
-		}
-		*/
 	}
 }
 
@@ -216,12 +186,54 @@ void LyricFrame::slotMovingUpdateTimer()
 void LyricFrame::slotOnUpdateTimer()
 {
 	//
+	auto song = LyricXML::getInstance()->song();
+//	qint64 curMS = _elapsedTimer->elapsed() - song.general.offset;
+	qint64 curMS = MainWindow::mainWindow()->playerPosition();
+
+	// die old
 	if (_sentences.size())
 	{
-		qint64 curMS = _elapsedTimer->elapsed();
-		for (int i = 0; i < _sentences.size(); i++)
+		Q_FOREACH(auto sentence, _sentences)
 		{
-			_sentences[i]->act(curMS);
+			if (curMS > sentence->clearTime())
+			{
+				sentence->clearSentence();
+			}
 		}
 	}
+	// birth new
+	Q_FOREACH(auto sentence, song.lyric.sentencelist)
+	{
+		if (curMS >= sentence.birth && sentence.birth > _previousMSec && curMS < sentence.birth+sentence.duration)
+		{
+			_sentences[sentence.line]->clearSentence();	// not needed
+			_sentences[sentence.line]->setClearTime(sentence.birth + sentence.duration);
+
+			Q_FOREACH(auto word, sentence.wordlist)
+			{
+				auto kw = new KaraokeWord(NULL);
+				kw->setLyric(word.text);
+				kw->setBeginEnd(word.birth, word.birth + word.duration);
+				kw->setRubyHidden(word.rubyhidden);
+				if (!word.rubylist.empty())
+				{
+					Q_FOREACH(auto ruby, word.rubylist)
+					{
+						kw->addRubyChar(ruby.text, ruby.birth, ruby.birth + ruby.duration);
+					}
+				}
+				//kw->setTextColor()
+				_sentences[sentence.line]->addWord(kw);
+			}
+		}
+	}
+
+	if (_sentences.size())
+	{
+		Q_FOREACH(auto sentence, _sentences)
+		{
+			sentence->act(curMS);
+		}
+	}
+	_previousMSec = curMS;
 }

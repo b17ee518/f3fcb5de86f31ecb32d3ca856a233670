@@ -24,6 +24,7 @@ public:
 	void setRubyHidden(bool bHidden);
 
 	void rebuild();
+	void doPaint();
 
 	QSizeF boundingBoxSize();
 
@@ -60,7 +61,6 @@ private:
 	bool _isRubyHidden = false;
 
 	bool _locked = false;
-	
 };
 
 #endif // KARAOKEWORD_H

@@ -22,14 +22,11 @@ bool LyricXML::loadXML(const QString& path)
 	{
 		return false;
 	}
-	else
+	if (!document.setContent(&file))
 	{
-		if (!document.setContent(&file))
-		{
-			return false;
-		}
-		file.close();
+		return false;
 	}
+	file.close();
 
 	QDomElement root = document.firstChildElement();
 	_song.Clear();
@@ -37,6 +34,140 @@ bool LyricXML::loadXML(const QString& path)
 	prepare();
 
 	return true;
+}
+
+bool LyricXML::loadLRC(const QString& path)
+{
+	QFile infile(path);
+	if (!infile.open(QIODevice::ReadOnly | QIODevice::Text))
+	{
+		return false;
+	}
+
+	_song.Clear();
+	auto settings = Settings::getInstance();
+	_song.general.maxline = 2;	// always 2 ?
+
+	while (!infile.atEnd())
+	{
+		QByteArray lineByte = infile.readLine();
+		QString line = QString::fromStdString(lineByte.toStdString()).trimmed();
+		if (!line.startsWith("["))
+		{
+			continue;
+		}
+		if (!line.contains("]"))
+		{
+			continue;
+		}
+		int indexOfClose = line.indexOf("]");
+		QString controlPart = line.mid(1, indexOfClose - 1).trimmed();
+		if (controlPart.startsWith("ti:"))
+		{
+			_song.info.title = controlPart.right(controlPart.length() - 3); // no trim
+		}
+		else if (controlPart.startsWith("au:"))
+		{
+			_song.info.author = controlPart.right(controlPart.length() - 3); // no trim
+		}
+		else if (controlPart.startsWith("ar:"))
+		{
+			_song.info.artist = controlPart.right(controlPart.length() - 3); // no trim
+		}
+		else if (controlPart.startsWith("al:"))
+		{
+			_song.info.album = controlPart.right(controlPart.length() - 3); // no trim
+		}
+		else if (controlPart.startsWith("by:"))
+		{
+			_song.info.by = controlPart.right(controlPart.length() - 3); // no trim
+		}
+		else if (controlPart.startsWith("offset:"))
+		{
+			_song.general.offset = controlPart.right(controlPart.length() - 7).toLongLong();
+		}
+		else if (controlPart.at(0).isDigit())
+		{
+			QTime beginTime = QTime::fromString(controlPart + "0", "mm:ss.zzz");
+			qint64 begin = beginTime.msecsSinceStartOfDay();
+
+			KXMLSentence sentence;
+			KXMLWord word;
+			word.birth = begin;
+			word.duration = std::numeric_limits<qint64>::max();
+			word.text = line.right(line.length() - indexOfClose-1);
+
+			if (word.text.isEmpty())
+			{
+				int thisIndex = _song.lyric.sentencelist.count();
+				if (thisIndex % _song.general.maxline == 0)
+				{
+					// skip
+					continue;
+				}
+				else
+				{
+					// move up
+					// skip multiple whites
+					if (_song.lyric.sentencelist.last().wordlist.last().birth < 0)
+					{
+						continue;
+					}
+					else
+					{
+						word.duration = settings->minimumDuration();
+						/*
+						if (thisIndex % _song.general.maxline == _song.general.maxline-1
+							&& word.birth - _song.lyric.sentencelist[thisIndex - (_song.general.maxline - 1)].wordlist.last().birth < Settings::getInstance()->lyricShortFadeTimeMS)
+						{
+							word.birth = _song.lyric.sentencelist[thisIndex - (_song.general.maxline - 1)].wordlist.last().birth + Settings::getInstance()->lyricShortFadeTimeMS;
+						}
+						*/
+					}
+				}
+			}
+
+			if (!_song.lyric.sentencelist.empty())
+			{
+				KXMLWord& lastword = _song.lyric.sentencelist.last().wordlist.last();
+				if (lastword.duration > settings->minimumDuration())
+				{
+					lastword.duration = begin - lastword.birth;
+				}
+			}
+			sentence.wordlist.append(word);
+			_song.lyric.sentencelist.append(sentence);
+		}
+	}
+	lrcWordSeparate();
+
+	QFileInfo info(path);
+	QString strXML = info.absolutePath() + "/" + info.completeBaseName() + ".xml";
+	exportToXML(strXML);
+
+	loadXML(strXML);
+//	prepare();
+	return true;
+}
+
+void LyricXML::exportToXML(const QString& path)
+{
+	QFile file(path);
+	if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
+	{
+		return;
+	}
+	QDomDocument doc;
+	QDomProcessingInstruction instr = doc.createProcessingInstruction(
+		"xml", "version='1.0' encoding='UTF-8'");
+	doc.appendChild(instr);
+	QDomElement songNode = doc.createElement("song");
+	_song.Export(songNode);
+	doc.appendChild(songNode);
+	QTextStream stream(&file);
+	stream.setGenerateByteOrderMark(true);
+	stream << doc.toString();
+	file.close();
 }
 
 void LyricXML::prepare()
@@ -84,14 +215,17 @@ void LyricXML::prepare()
 //		if (itNext != _song.lyric.sentencelist.end())
 		if (i < _song.lyric.sentencelist.size() - 1)
 		{
-			int thisModIndex = (_song.lyric.sentencelist[i].line) % maxline;
-			int nextModIndex = (_song.lyric.sentencelist[i+1].line) % maxline + maxline;
-			if (thisModIndex + 1 != nextModIndex)
+			if (_song.lyric.sentencelist[i + 1].line >= 0)
 			{
-				for (int j = thisModIndex+1; j < nextModIndex; j++)
+				int thisModIndex = (_song.lyric.sentencelist[i].line) % maxline;
+				int nextModIndex = (_song.lyric.sentencelist[i + 1].line) % maxline + maxline;
+				if (thisModIndex + 1 != nextModIndex)
 				{
-					_song.lyric.sentencelist.insert(std::next(_song.lyric.sentencelist.begin(), i+1), buildEmptyLine(j%maxline));
-					i++;
+					for (int j = thisModIndex + 1; j < nextModIndex; j++)
+					{
+						_song.lyric.sentencelist.insert(std::next(_song.lyric.sentencelist.begin(), i + 1), buildEmptyLine(j%maxline));
+						i++;
+					}
 				}
 			}
 		}
@@ -243,7 +377,7 @@ void LyricXML::prepare()
 	{
 		for (int j = 0; j < maxline; j++)
 		{
-			int index = i*paragraphCount + j;
+			int index = i*maxline + j;
 			auto sentence = &(_song.lyric.sentencelist[index]);
 			if (sentence->_birthCalc < 0 || sentence->_durationCalc < 0)
 			{
@@ -259,7 +393,7 @@ void LyricXML::prepare()
 					{
 						continue;
 					}
-					int nIndex = i*paragraphCount + k;
+					int nIndex = i*maxline + k;
 					auto nSentence = &(_song.lyric.sentencelist[nIndex]);
 					if (nSentence->_birthCalc < 0 || nSentence->_durationCalc < 0)
 					{
@@ -283,7 +417,7 @@ void LyricXML::prepare()
 		qint64 maxDie = 0;
 		for (int j = 0; j < maxline; j++)
 		{
-			int index = i*paragraphCount + j;
+			int index = i*maxline + j;
 			auto sentence = &(_song.lyric.sentencelist[index]);
 			if (sentence->_birthCalc < minBirth)
 			{
@@ -363,29 +497,38 @@ void LyricXML::prepare()
 		{
 			// flash change: this birth
 			// i should > 0
+
+			// problems:
+			// this birth earlier than prev die
+
 			// WARNING omit too short cases?
 
 			// first several appear 2 sec front of last previous abs die
 			// previous die just before this emerge
+			
 			int lastPreviousIndex = (i - 1)*maxline + maxline - 1;
 			Q_ASSERT(lastPreviousIndex >= 0);
 			qint64 lastPreviousDieTime = _song.lyric.sentencelist[lastPreviousIndex]._birthCalc + _song.lyric.sentencelist[lastPreviousIndex]._durationCalc;
 
+			int thisLastIndex = i*maxline + maxline - 1;
+
 			qint64 firstSeveralBirth = lastPreviousDieTime - setting->lyricShortFadeTimeMS;
-			qint64 lastBirth = lastPreviousDieTime + setting->lyricShortFadeTimeMS;
-			qint64 prevFirstSeveralDie = firstSeveralBirth - setting->lyricRestIntervalMS;
+			qint64 lastBirth = lastPreviousDieTime + setting->lyricShortFadeTimeMS;		// cause problems
+			qint64 prevFirstSeveralDie = firstSeveralBirth - setting->lyricRestIntervalMS; // cause problems
 			qint64 prevLastDie = lastBirth - setting->lyricRestIntervalMS;
 			for (int j = 0; j < maxline-1; j++)
 			{
 				int index = i*maxline + j;
 				_song.lyric.sentencelist[index].birth = firstSeveralBirth;
+				Q_ASSERT(firstSeveralBirth <= _song.lyric.sentencelist[index]._birthCalc);
 				int lastIndex = (i - 1)*maxline + j;
 				_song.lyric.sentencelist[lastIndex].duration = prevFirstSeveralDie - _song.lyric.sentencelist[lastIndex].birth;
+				Q_ASSERT(firstSeveralBirth >= _song.lyric.sentencelist[lastIndex]._birthCalc + _song.lyric.sentencelist[lastIndex]._durationCalc);
 			}
-			_song.lyric.sentencelist[(i+1)*maxline - 1].birth = lastBirth;
-			_song.lyric.sentencelist[i*maxline - 1].birth = prevLastDie - _song.lyric.sentencelist[i*maxline - 1].birth;
-
-
+			_song.lyric.sentencelist[(i + 1)*maxline - 1].birth = lastBirth;
+			Q_ASSERT(lastBirth <= _song.lyric.sentencelist[(i + 1)*maxline - 1]._birthCalc);
+			_song.lyric.sentencelist[i*maxline - 1].duration = prevLastDie - _song.lyric.sentencelist[i*maxline - 1].birth;
+			
 		}
 	}
 
@@ -403,6 +546,35 @@ void LyricXML::prepare()
 	}
 }
 
+void LyricXML::lrcWordSeparate()
+{
+	for (QList<KXMLSentence>::iterator sentenceIt = _song.lyric.sentencelist.begin(); sentenceIt != _song.lyric.sentencelist.end(); ++sentenceIt)
+	{
+		if (sentenceIt->wordlist.count() != 1)
+		{
+			continue;
+		}
+		QString text = sentenceIt->wordlist.first().text;
+		if (text.trimmed().isEmpty())
+		{
+			continue;
+		}
+		qint64 firstBegin = sentenceIt->wordlist.first().birth;
+		qint64 totalDuration = sentenceIt->wordlist.first().duration;
+
+		sentenceIt->wordlist.clear();
+		int len = text.length();
+		for (int i = 0; i < len; i++)
+		{
+			KXMLWord word;
+			word.text = text.at(i);
+			word.birth = firstBegin + i*totalDuration / len;
+			word.duration = totalDuration / len;
+			sentenceIt->wordlist.append(word);
+		}
+	}
+}
+
 KXMLSentence LyricXML::buildEmptyLine(int lineNum)
 {
 	KXMLSentence sentence;
@@ -411,7 +583,7 @@ KXMLSentence LyricXML::buildEmptyLine(int lineNum)
 	return sentence;
 }
 
-QString LyricXML::subTextForElem(const QDomElement& elem, const QString& name)
+QString KXMLBase::subTextForElem(const QDomElement& elem, const QString& name)
 {
 	auto elements = elem.elementsByTagName(name);
 	if (!elements.count())
@@ -428,41 +600,89 @@ QString LyricXML::subTextForElem(const QDomElement& elem, const QString& name)
 	return "";
 }
 
+void KXMLBase::addTextToElem(QDomElement& elem, const QString& name, const QString& text)
+{
+	QDomDocument doc = elem.ownerDocument();
+	QDomElement node = doc.createElement(name);
+	QDomText textDom = doc.createTextNode(text);
+	node.appendChild(textDom);
+	elem.appendChild(node);
+}
+
 bool KXMLInfo::ReadFromXML(const QDomElement& elem)
 {
-	auto xml = LyricXML::getInstance();
-
-	name = xml->subTextForElem(elem, "name");
-	singer = xml->subTextForElem(elem, "singer");
-	description = xml->subTextForElem(elem, "description");
+	title = subTextForElem(elem, "title");
+	author = subTextForElem(elem, "author");
+	artist = subTextForElem(elem, "artist");
+	album = subTextForElem(elem, "album");
+	by = subTextForElem(elem, "by");
+	description = subTextForElem(elem, "description");
 
 	return true;
+}
+
+void KXMLInfo::Export(QDomElement& elem)
+{
+	if (!title.isEmpty())
+	{
+		addTextToElem(elem, "title", title);
+	}
+	if (!author.isEmpty())
+	{
+		addTextToElem(elem, "author", author);
+	}
+	if (!artist.isEmpty())
+	{
+		addTextToElem(elem, "artist", artist);
+	}
+	if (!album.isEmpty())
+	{
+		addTextToElem(elem, "album", album);
+	}
+	if (!by.isEmpty())
+	{
+		addTextToElem(elem, "by", by);
+	}
+	if (!description.isEmpty())
+	{
+		addTextToElem(elem, "description", description);
+	}
 }
 
 bool KXMLGeneral::ReadFromXML(const QDomElement& elem)
 {
-	auto xml = LyricXML::getInstance();
-
-	auto maxlineText = xml->subTextForElem(elem, "maxline");
+	auto maxlineText = subTextForElem(elem, "maxline");
 	if (!maxlineText.isEmpty())
 	{
 		maxline = maxlineText.toInt();
 	}
+	auto offsetText = subTextForElem(elem, "offset");
+	if (!offsetText.isEmpty())
+	{
+		offset = offsetText.toLongLong();
+	}
 
 	return true;
+}
+
+void KXMLGeneral::Export(QDomElement& elem)
+{
+	addTextToElem(elem, "maxline", QString::number(maxline));
+	if (offset != 0)
+	{
+		addTextToElem(elem, "offset", QString::number(offset));
+	}
 }
 
 bool KXMLRuby::ReadFromXML(const QDomElement& elem)
 {
-	auto xml = LyricXML::getInstance();
-
-	text = xml->subTextForElem(elem, "text");
-	auto birthText = xml->subTextForElem(elem, "birth");
+	text = subTextForElem(elem, "text");
+	auto birthText = subTextForElem(elem, "birth");
 	if (!birthText.isEmpty())
 	{
 		birth = birthText.toLongLong();
 	}
-	auto durationText = xml->subTextForElem(elem, "duration");
+	auto durationText = subTextForElem(elem, "duration");
 	if (!durationText.isEmpty())
 	{
 		duration = durationText.toLongLong();
@@ -471,27 +691,38 @@ bool KXMLRuby::ReadFromXML(const QDomElement& elem)
 	return true;
 }
 
+void KXMLRuby::Export(QDomElement& elem)
+{
+	addTextToElem(elem, "text", text);
+	if (birth >= 0)
+	{
+		addTextToElem(elem, "birth", QString::number(birth));
+	}
+	if (duration >= 0)
+	{
+		addTextToElem(elem, "duration", QString::number(duration));
+	}
+}
+
 bool KXMLWord::ReadFromXML(const QDomElement& elem)
 {
-	auto xml = LyricXML::getInstance();
-
-	text = xml->subTextForElem(elem, "text");
-	auto colorText = xml->subTextForElem(elem, "color");
+	text = subTextForElem(elem, "text");
+	auto colorText = subTextForElem(elem, "color");
 	if (!colorText.isEmpty())
 	{
 		color = colorText.toInt();
 	}
-	auto birthText = xml->subTextForElem(elem, "birth");
+	auto birthText = subTextForElem(elem, "birth");
 	if (!birthText.isEmpty())
 	{
 		birth = birthText.toLongLong();
 	}
-	auto durationText = xml->subTextForElem(elem, "duration");
+	auto durationText = subTextForElem(elem, "duration");
 	if (!durationText.isEmpty())
 	{
 		duration = durationText.toLongLong();
 	}
-	auto rubyhiddenText = xml->subTextForElem(elem, "rubyhidden");
+	auto rubyhiddenText = subTextForElem(elem, "rubyhidden");
 	if (!rubyhiddenText.isEmpty())
 	{
 		rubyhidden = rubyhiddenText.toInt();
@@ -507,26 +738,53 @@ bool KXMLWord::ReadFromXML(const QDomElement& elem)
 	return true;
 }
 
+void KXMLWord::Export(QDomElement& elem)
+{
+	addTextToElem(elem, "text", text);
+	if (color >= 0)
+	{
+		addTextToElem(elem, "color", QString::number(color));
+	}
+	if (birth >= 0)
+	{
+		addTextToElem(elem, "birth", QString::number(birth));
+	}
+	if (duration >= 0)
+	{
+		addTextToElem(elem, "duration", QString::number(duration));
+	}
+	if (rubyhidden > 0)
+	{
+		addTextToElem(elem, "rubyhidden", QString::number(rubyhidden));
+	}
+
+	QDomDocument doc = elem.ownerDocument();
+	Q_FOREACH(auto ruby, rubylist)
+	{
+		QDomElement rubyNode = doc.createElement("ruby");
+		ruby.Export(rubyNode);
+		elem.appendChild(rubyNode);
+	}
+}
+
 bool KXMLSentence::ReadFromXML(const QDomElement& elem)
 {
-	auto xml = LyricXML::getInstance();
-
-	auto lineText = xml->subTextForElem(elem, "line");
+	auto lineText = subTextForElem(elem, "line");
 	if (!lineText.isEmpty())
 	{
 		line = lineText.toInt();
 	}
-	auto colorText = xml->subTextForElem(elem, "color");
+	auto colorText = subTextForElem(elem, "color");
 	if (!colorText.isEmpty())
 	{
 		color = colorText.toInt();
 	}
-	auto birthText = xml->subTextForElem(elem, "birth");
+	auto birthText = subTextForElem(elem, "birth");
 	if (!birthText.isEmpty())
 	{
 		birth = birthText.toLongLong();
 	}
-	auto durationText = xml->subTextForElem(elem, "duration");
+	auto durationText = subTextForElem(elem, "duration");
 	if (!durationText.isEmpty())
 	{
 		duration = durationText.toLongLong();
@@ -542,6 +800,35 @@ bool KXMLSentence::ReadFromXML(const QDomElement& elem)
 	return true;
 }
 
+void KXMLSentence::Export(QDomElement& elem)
+{
+	if (line >= 0)
+	{
+		addTextToElem(elem, "line", QString::number(line));
+	}
+	if (color >= 0)
+	{
+		addTextToElem(elem, "color", QString::number(color));
+	}
+	if (birth >= 0)
+	{
+		addTextToElem(elem, "birth", QString::number(birth));
+	}
+	if (duration >= 0)
+	{
+		addTextToElem(elem, "duration", QString::number(duration));
+	}
+
+	QDomDocument doc = elem.ownerDocument();
+	Q_FOREACH(auto word, wordlist)
+	{
+		QDomElement wordNode = doc.createElement("word");
+		word.Export(wordNode);
+		elem.appendChild(wordNode);
+	}
+
+}
+
 bool KXMLLyric::ReadFromXML(const QDomElement& elem)
 {
 	auto sentences = elem.elementsByTagName("sentence");
@@ -553,6 +840,17 @@ bool KXMLLyric::ReadFromXML(const QDomElement& elem)
 	}
 
 	return true;
+}
+
+void KXMLLyric::Export(QDomElement& elem)
+{
+	QDomDocument doc = elem.ownerDocument();
+	Q_FOREACH(auto sentence, sentencelist)
+	{
+		QDomElement sentenceNode = doc.createElement("sentence");
+		sentence.Export(sentenceNode);
+		elem.appendChild(sentenceNode);
+	}
 }
 
 bool KXMLSong::ReadFromXML(const QDomElement& elem)
@@ -573,4 +871,20 @@ bool KXMLSong::ReadFromXML(const QDomElement& elem)
 		return lyric.ReadFromXML(lyrics.at(0).toElement());
 	}
 	return false;
+}
+
+void KXMLSong::Export(QDomElement& elem)
+{
+	QDomDocument doc = elem.ownerDocument();
+	QDomElement infoNode = doc.createElement("info");
+	info.Export(infoNode);
+	elem.appendChild(infoNode);
+
+	QDomElement generalNode = doc.createElement("general");
+	general.Export(generalNode);
+	elem.appendChild(generalNode);
+
+	QDomElement lyricNode = doc.createElement("lyric");
+	lyric.Export(lyricNode);
+	elem.appendChild(lyricNode);
 }

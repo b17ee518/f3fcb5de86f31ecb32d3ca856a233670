@@ -2,46 +2,71 @@
 
 #include <QtXml>
 
+class KXMLBase
+{
+public:
+	KXMLBase(){ }
 
-class KXMLInfo
+	virtual bool ReadFromXML(const QDomElement& elem) = 0;
+	virtual void Export(QDomElement& elem) = 0;
+	virtual void Clear() = 0;
+
+
+public:
+	QString subTextForElem(const QDomElement& elem, const QString& name);
+	void addTextToElem(QDomElement& elem, const QString& name, const QString& text);
+};
+
+class KXMLInfo : KXMLBase
 {
 public:
 	KXMLInfo(){ Clear(); }
 
-	bool ReadFromXML(const QDomElement& elem);
-	void Clear()
+	virtual bool ReadFromXML(const QDomElement& elem) override;
+	virtual void Export(QDomElement& elem) override;
+	virtual void Clear() override
 	{
-		name = "";
-		singer = "";
+		title = "";
+		author = "";
+		artist = "";
+		album = "";
+		by = "";
 		description = "";
 	}
 
-	QString name;
-	QString singer;
+	QString title;
+	QString author;
+	QString artist;
+	QString album;
+	QString by;
 	QString description;
 };
 
-class KXMLGeneral
+class KXMLGeneral : KXMLBase
 {
 public:
 	KXMLGeneral(){ Clear(); }
 
-	bool ReadFromXML(const QDomElement& elem);
-	void Clear()
+	virtual bool ReadFromXML(const QDomElement& elem) override;
+	virtual void Export(QDomElement& elem) override;
+	virtual void Clear() override
 	{
 		maxline = 2;
+		offset = 0;
 	}
 
 	int maxline = 2;
+	qint64 offset;
 };
 
-class KXMLRuby
+class KXMLRuby : KXMLBase
 {
 public:
 	KXMLRuby(){ Clear(); }
 
-	bool ReadFromXML(const QDomElement& elem);
-	void Clear()
+	virtual bool ReadFromXML(const QDomElement& elem) override;
+	virtual void Export(QDomElement& elem) override;
+	virtual void Clear() override
 	{
 		text = "";
 		birth = -1;
@@ -53,13 +78,14 @@ public:
 	qint64 duration = -1;	// no birth no duration OR all but last duration set
 };
 
-class KXMLWord
+class KXMLWord : KXMLBase
 {
 public:
 	KXMLWord(){ Clear(); }
 
-	bool ReadFromXML(const QDomElement& elem);
-	void Clear()
+	virtual bool ReadFromXML(const QDomElement& elem) override;
+	virtual void Export(QDomElement& elem) override;
+	virtual void Clear() override
 	{
 		text = "";
 		color = -1;
@@ -77,15 +103,16 @@ public:
 	QList<KXMLRuby> rubylist;
 };
 
-class KXMLSentence
+class KXMLSentence : KXMLBase
 {
 public:
 	KXMLSentence(){ Clear(); }
 
-	bool ReadFromXML(const QDomElement& elem);
-	void Clear()
+	virtual bool ReadFromXML(const QDomElement& elem) override;
+	virtual void Export(QDomElement& elem) override;
+	virtual void Clear() override
 	{
-		line = 0;
+		line = -1;
 		color = -1;
 		birth = -1;
 		duration = -1;
@@ -106,13 +133,14 @@ public:
 	QList<KXMLWord> wordlist;
 };
 
-class KXMLLyric
+class KXMLLyric : KXMLBase
 {
 public:
 	KXMLLyric(){ Clear(); }
 
-	bool ReadFromXML(const QDomElement& elem);
-	void Clear()
+	virtual bool ReadFromXML(const QDomElement& elem) override;
+	virtual void Export(QDomElement& elem) override;
+	virtual void Clear() override
 	{
 		sentencelist.clear();
 	}
@@ -120,13 +148,14 @@ public:
 	QList<KXMLSentence> sentencelist;
 };
 
-class KXMLSong
+class KXMLSong : KXMLBase
 {
 public:
 	KXMLSong(){ Clear(); }
 
-	bool ReadFromXML(const QDomElement& elem);
-	void Clear()
+	virtual bool ReadFromXML(const QDomElement& elem) override;
+	virtual void Export(QDomElement& elem) override;
+	virtual void Clear() override
 	{
 		info.Clear();
 		general.Clear();
@@ -137,7 +166,6 @@ public:
 	KXMLGeneral general;
 	KXMLLyric lyric;
 };
-
 
 class LyricXML
 {
@@ -165,14 +193,15 @@ public:
 
 public:
 	bool loadXML(const QString& path);
+	bool loadLRC(const QString& path);
 	inline const KXMLSong song(){ return _song; }
+
+	void exportToXML(const QString& path);
 
 private:
 	void prepare();
+	void lrcWordSeparate();
 	KXMLSentence buildEmptyLine(int lineNum);
-
-public:
-	QString subTextForElem(const QDomElement& elem, const QString& name);
 
 private:
 	KXMLSong _song;

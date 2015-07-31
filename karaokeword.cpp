@@ -67,7 +67,7 @@ void KaraokeWord::updateProportion(qreal prop)
 		{
 			_proportion = 1.0;
 		}
-		repaint();
+		doPaint();
 	}
 }
 
@@ -145,6 +145,11 @@ void KaraokeWord::setRubyHidden(bool bHidden)
 void KaraokeWord::rebuild()
 {
 	BuildWord();
+	doPaint();
+}
+
+void KaraokeWord::doPaint()
+{
 	repaint();
 }
 

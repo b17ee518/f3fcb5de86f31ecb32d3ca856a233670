@@ -23,6 +23,11 @@ public:
 	void setMaxSentences(int count);
 
 	void BuildByXML();
+
+	void Play();
+	void Pause();
+	void Stop();
+	void Jumped(qint64 oldPosition);
 	
 protected:
 	void mousePressEvent(QMouseEvent *e) override;
@@ -47,6 +52,8 @@ private:
 	QElapsedTimer* _elapsedTimer = NULL;
 
 	QVBoxLayout * _layout = NULL;
+
+	qint64 _previousMSec = std::numeric_limits<qint64>::min();
 
 private slots:
 	void slotMovingUpdateTimer();

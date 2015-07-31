@@ -110,6 +110,15 @@
     <ClCompile Include="lyricXML.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="qdirectslider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_qdirectslider.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_qdirectslider.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="mainwindow.h">
@@ -131,6 +140,9 @@
       <Filter>Header Files</Filter>
     </CustomBuild>
     <CustomBuild Include="RubyChar.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="qdirectslider.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>

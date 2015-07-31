@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <song>
     <info>
-        <name>
+        <title>
             A Song
-        </name>
-        <singer>
+        </title>
+        <artist>
             Person
-        </singer>
+        </artist>
         <description>
             Description
         </description>
@@ -18,14 +18,14 @@
         <sentence>
             <word>
                 <text>0001</text>
-                <birth>0000</birth>
+                <birth>5000</birth>
                 <duration>5000</duration>
             </word>
         </sentence>
         <sentence>
             <word>
                 <text>0002</text>
-                <birth>5000</birth>
+                <birth>10000</birth>
                 <duration>5000</duration>
             </word>
         </sentence>

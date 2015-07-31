@@ -57,6 +57,11 @@ void SentenceHolder::setBeginMarginSpace(qreal space)
 	_horizontalSpacer->changeSize(_beginMarginSpace*Settings::getInstance()->majorScale(), 0);
 }
 
+void SentenceHolder::setClearTime(qint64 clearTime)
+{
+	_clearTime = clearTime;
+}
+
 void SentenceHolder::setDirection(int dir)
 {
 	_direction = dir;

@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QMediaPlayer>
 
 namespace Ui {
 class MainWindow;
@@ -15,26 +16,46 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+	static void setMainWindow(MainWindow* w);
+	static MainWindow* mainWindow();
+
 	void doCloseWindow();
 	void togglePlayPause();
 	void play();
 	void pause();
 	void stop();
 
+	bool isPaused();
+
+	void setVolume(int vol);
+
 	void jumpToPosition(qint64 msec);
 	void nextSong();
 	void previousSong();
 
 	bool loadXML(const QString& path);
+	bool loadLRC(const QString& path);
+
+	void loadMusic(const QString& path);
+
+	qint64 playerPosition();
+	void setPlayerPosition(qint64 position);
 
 protected:
 	void enterEvent(QEvent *e) override;
 	void leaveEvent(QEvent *e) override;
 	
+public:
+	void updateTimeElapsedSlider(qint64 percent);
+	void setDuration(qint64 duration);
+	
 private:
     Ui::MainWindow *ui;
 
+	QMediaPlayer* _player = NULL;
 	bool _isPlaying = false;
+
+	static MainWindow* s_mainWindow;
 	
 	protected slots:
 
@@ -47,6 +68,8 @@ private:
 	void slotOnStopButtonClicked();
 	void slotOnPlayStopButtonToggled(bool bChecked);
 	void slotOnListButtonToggled(bool bChecked);
+
+	void on_positionHorizontalSlider_sliderMoved(int position);
 };
 
 #endif // MAINWINDOW_H

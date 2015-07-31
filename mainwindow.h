@@ -45,7 +45,7 @@ protected:
 	void enterEvent(QEvent *e) override;
 	void leaveEvent(QEvent *e) override;
 	
-public:
+protected slots:
 	void updateTimeElapsedSlider(qint64 percent);
 	void setDuration(qint64 duration);
 	

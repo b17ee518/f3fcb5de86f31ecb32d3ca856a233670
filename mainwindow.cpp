@@ -17,12 +17,10 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    ui->setupUi(this);
+	ui->setupUi(this);
+	setWindowFlags(windowFlags()  | Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
 	setAttribute(Qt::WA_TranslucentBackground);
 	this->setStyleSheet("background-color: rgba(0, 0, 0, 2);");
-    setWindowFlags(Qt::FramelessWindowHint);
-
-	ui->lyricFrame->setMoveHandlingWidget(this);
 
 	_player = new QMediaPlayer(this);
 	connect(_player, SIGNAL(positionChanged(qint64)), this, SLOT(updateTimeElapsedSlider(qint64)));
@@ -30,8 +28,10 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(ui->positionSlider, SIGNAL(directJumped(int)), this, SLOT(on_positionHorizontalSlider_sliderMoved(int)));
 
 	setVolume(ui->volumeSlider->value());
+	ui->lyricFrame->setMoveHandlingWidget(this);
 	//
 	loadMusic("e:/Karaoke/temp/testLrc.mp3");
+//	loadMusic(QString::fromLocal8Bit("e:/nFinder2.1.0.1/Download/ゲーム/【4人実況】世界征服教室【G】#5 卒業旅行 最終回(sm26792683).mp4"));
 //	loadLRC("e:/Karaoke\temp/testLrc.lrc");
 //	loadXML("e:/Karaoke/f3fcb5de86f31ecb32d3ca856a233670/resource/test.xml");
 }

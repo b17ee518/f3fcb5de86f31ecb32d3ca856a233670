@@ -188,7 +188,7 @@ void LyricXML::prepare()
 	// feed front
 	for (int i = 0; i < _song.lyric.sentencelist.first().line; i++)
 	{
-		_song.lyric.sentencelist.push_front(buildEmptyLine(i));
+		_song.lyric.sentencelist.push_front(buildEmptyLine(i%maxline));
 	}
 //	for (QList<KXMLSentence>::iterator it = _song.lyric.sentencelist.begin(); it != _song.lyric.sentencelist.end();)
 	for (int i = 0; i < _song.lyric.sentencelist.size(); i++)
@@ -236,7 +236,7 @@ void LyricXML::prepare()
 			// shouldn't be ever called
 			for (int j = _song.lyric.sentencelist[i].line + 1; j < maxline; j++)
 			{
-				_song.lyric.sentencelist.push_back(buildEmptyLine(i));
+				_song.lyric.sentencelist.push_back(buildEmptyLine(i%maxline));
 				i++;
 			}
 		}

@@ -38,6 +38,7 @@ public:
 	inline qreal standardBeginMarginSpaceForRightAlignedSentence(){ return standardFontSize*beginMarginSpaceChar; }
 
 	inline qreal minimumDuration(){ return lyricShortFadeTimeMS + lyricRestIntervalMS; }
+	inline qreal maximumDuration(){ return lyricEndSentenceTimeMS; }
 
 public:
 	const qreal rubyFontScale = 0.35;
@@ -48,6 +49,7 @@ public:
 	const int beginMarginSpaceChar = 3;
 
 	const qint64 lyricLongFadeTimeMS = 2000;
+	const qint64 lyricEndSentenceTimeMS = 60000;
 	const qint64 lyricShortFadeTimeMS = 500;
 	const qint64 lyricRestIntervalMS = 200;
 //	const qreal lyricVeryShortIntervalScale = 0.1; omit now

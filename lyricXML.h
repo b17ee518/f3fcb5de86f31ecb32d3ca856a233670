@@ -120,6 +120,9 @@ public:
 
 		_birthCalc = -1;
 		_durationCalc = -1;
+
+		normaltext = "";
+		rubiedtext = "";
 	}
 
 	int line = -1;	// done
@@ -129,6 +132,9 @@ public:
 
 	qint64 _birthCalc = -1;
 	qint64 _durationCalc = -1;
+
+	QString normaltext;
+	QString rubiedtext;
 
 	QList<KXMLWord> wordlist;
 };

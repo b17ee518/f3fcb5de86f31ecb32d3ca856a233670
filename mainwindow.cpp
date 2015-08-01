@@ -17,6 +17,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+	setMainWindow(this);
+
 	ui->setupUi(this);
 	setWindowFlags(windowFlags()  | Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
 	setAttribute(Qt::WA_TranslucentBackground);
@@ -31,7 +33,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->lyricFrame->setMoveHandlingWidget(this);
 	//
 	loadMusic("e:/Karaoke/temp/testLrc.mp3");
-//	loadMusic(QString::fromLocal8Bit("e:/nFinder2.1.0.1/Download/ゲーム/【4人実況】世界征服教室【G】#5 卒業旅行 最終回(sm26792683).mp4"));
 //	loadLRC("e:/Karaoke\temp/testLrc.lrc");
 //	loadXML("e:/Karaoke/f3fcb5de86f31ecb32d3ca856a233670/resource/test.xml");
 }

@@ -184,6 +184,8 @@
     <ClCompile Include="helperkaraokelabel.cpp" />
     <ClCompile Include="karaokeword.cpp" />
     <ClCompile Include="lyricframe.cpp" />
+    <ClCompile Include="lyricLRC.cpp" />
+    <ClCompile Include="lyricPrepare.cpp" />
     <ClCompile Include="lyricXML.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mainwindow.cpp" />

@@ -45,6 +45,9 @@
       <Extensions>cpp;moc</Extensions>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
+    <Filter Include="Source Files\lyricFiles">
+      <UniqueIdentifier>{b0c8b449-ef5f-4101-bba0-57d8139d7b0a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -107,9 +110,6 @@
     <ClCompile Include="RubyChar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="lyricXML.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="qdirectslider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -118,6 +118,15 @@
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Release\moc_qdirectslider.cpp">
       <Filter>Generated Files\Release</Filter>
+    </ClCompile>
+    <ClCompile Include="lyricXML.cpp">
+      <Filter>Source Files\lyricFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="lyricLRC.cpp">
+      <Filter>Source Files\lyricFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="lyricPrepare.cpp">
+      <Filter>Source Files\lyricFiles</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

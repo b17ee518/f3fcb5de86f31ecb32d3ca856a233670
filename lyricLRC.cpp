@@ -61,8 +61,8 @@ bool LyricJson::loadLRC(const QString& path, const QString& musicPath)
 
 			KJsonSentence sentence;
 			KJsonWord word;
-			word.birth = begin;
-			word.duration = settings->maximumDuration(); //std::numeric_limits<qint64>::max();
+			word.begin = begin;
+			word.end = begin + settings->maximumDuration(); //std::numeric_limits<qint64>::max();
 			word.text = line.right(line.length() - indexOfClose - 1);
 
 			if (word.text.isEmpty())
@@ -77,20 +77,13 @@ bool LyricJson::loadLRC(const QString& path, const QString& musicPath)
 				{
 					// move up
 					// skip multiple whites
-					if (_song.lyric.sentencelist.last().wordlist.last().birth < 0)
+					if (_song.lyric.sentencelist.last().wordlist.last().begin < 0)
 					{
 						continue;
 					}
 					else
 					{
-						word.duration = settings->minimumDuration();
-						/*
-						if (thisIndex % _song.general.maxline == _song.general.maxline-1
-						&& word.birth - _song.lyric.sentencelist[thisIndex - (_song.general.maxline - 1)].wordlist.last().birth < Settings::getInstance()->lyricShortFadeTimeMS)
-						{
-						word.birth = _song.lyric.sentencelist[thisIndex - (_song.general.maxline - 1)].wordlist.last().birth + Settings::getInstance()->lyricShortFadeTimeMS;
-						}
-						*/
+						word.end = word.begin + settings->minimumDuration();
 					}
 				}
 			}
@@ -98,9 +91,9 @@ bool LyricJson::loadLRC(const QString& path, const QString& musicPath)
 			if (!_song.lyric.sentencelist.empty())
 			{
 				KJsonWord& lastword = _song.lyric.sentencelist.last().wordlist.last();
-				if (lastword.duration > settings->minimumDuration())
+				if (lastword.end - lastword.begin> settings->minimumDuration())
 				{
-					lastword.duration = begin - lastword.birth;
+					lastword.end = begin;// - lastword.begin;
 				}
 			}
 			sentence.wordlist.append(word);
@@ -134,8 +127,8 @@ void LyricJson::lrcWordSeparate()
 		{
 			continue;
 		}
-		qint64 firstBegin = sentenceIt->wordlist.first().birth;
-		qint64 totalDuration = sentenceIt->wordlist.first().duration;
+		qint64 firstBegin = sentenceIt->wordlist.first().begin;
+		qint64 totalDuration = sentenceIt->wordlist.first().end - firstBegin;
 
 		// text format
 		// [text|ruby]
@@ -219,15 +212,15 @@ void LyricJson::lrcWordSeparate()
 		int curCount = 0;
 		for (int i = 0; i < sentenceIt->wordlist.size(); i++)
 		{
-			sentenceIt->wordlist[i].birth = firstBegin + curCount*totalDuration / wordRubyCount;
+			sentenceIt->wordlist[i].begin = firstBegin + curCount*totalDuration / wordRubyCount;
 			int rubyCount = sentenceIt->wordlist[i].rubylist.size();
 			if (rubyCount)
 			{
-				sentenceIt->wordlist[i].duration = rubyCount*totalDuration / wordRubyCount;
+				sentenceIt->wordlist[i].end = sentenceIt->wordlist[i].begin + rubyCount*totalDuration / wordRubyCount;
 				for (int j = 0; j < rubyCount; j++)
 				{
-					sentenceIt->wordlist[i].rubylist[j].birth = firstBegin + curCount*totalDuration / wordRubyCount;
-					sentenceIt->wordlist[i].rubylist[j].duration = totalDuration / wordRubyCount;
+					sentenceIt->wordlist[i].rubylist[j].begin = firstBegin + curCount*totalDuration / wordRubyCount;
+					sentenceIt->wordlist[i].rubylist[j].end = sentenceIt->wordlist[i].rubylist[j].begin + totalDuration / wordRubyCount;
 					curCount++;
 				}
 				continue;
@@ -236,11 +229,11 @@ void LyricJson::lrcWordSeparate()
 			{
 				if (!sentenceIt->wordlist[i].text.trimmed().isEmpty())
 				{
-					sentenceIt->wordlist[i].duration = totalDuration / wordRubyCount;
+					sentenceIt->wordlist[i].end = sentenceIt->wordlist[i].begin + totalDuration / wordRubyCount;
 				}
 				else
 				{
-					sentenceIt->wordlist[i].duration = 0;
+					sentenceIt->wordlist[i].end = sentenceIt->wordlist[i].begin;
 				}
 			}
 			curCount++;

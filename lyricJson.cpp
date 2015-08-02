@@ -165,15 +165,15 @@ void KJsonGeneral::Export(QJsonObject & elem)
 bool KJsonRuby::ReadFromJson(const QJsonObject & elem)
 {
 	text = subTextForElem(elem, "text");
-	auto birthText = subTextForElem(elem, "birth");
-	if (!birthText.isEmpty())
+	auto beginText = subTextForElem(elem, "begin");
+	if (!beginText.isEmpty())
 	{
-		birth = birthText.toLongLong();
+		begin = beginText.toLongLong();
 	}
-	auto durationText = subTextForElem(elem, "duration");
-	if (!durationText.isEmpty())
+	auto endText = subTextForElem(elem, "end");
+	if (!endText.isEmpty())
 	{
-		duration = durationText.toLongLong();
+		end = endText.toLongLong();
 	}
 
 	return true;
@@ -182,13 +182,13 @@ bool KJsonRuby::ReadFromJson(const QJsonObject & elem)
 void KJsonRuby::Export(QJsonObject & elem)
 {
 	addTextToElem(elem, "text", text);
-	if (birth >= 0)
+	if (begin >= 0)
 	{
-		addTextToElem(elem, "birth", QString::number(birth));
+		addTextToElem(elem, "begin", QString::number(begin));
 	}
-	if (duration >= 0)
+	if (end >= 0)
 	{
-		addTextToElem(elem, "duration", QString::number(duration));
+		addTextToElem(elem, "end", QString::number(end));
 	}
 }
 
@@ -200,15 +200,15 @@ bool KJsonWord::ReadFromJson(const QJsonObject & elem)
 	{
 		color = colorText.toInt();
 	}
-	auto birthText = subTextForElem(elem, "birth");
-	if (!birthText.isEmpty())
+	auto beginText = subTextForElem(elem, "begin");
+	if (!beginText.isEmpty())
 	{
-		birth = birthText.toLongLong();
+		begin = beginText.toLongLong();
 	}
-	auto durationText = subTextForElem(elem, "duration");
-	if (!durationText.isEmpty())
+	auto endText = subTextForElem(elem, "end");
+	if (!endText.isEmpty())
 	{
-		duration = durationText.toLongLong();
+		end = endText.toLongLong();
 	}
 	auto rubyhiddenText = subTextForElem(elem, "rubyhidden");
 	if (!rubyhiddenText.isEmpty())
@@ -237,13 +237,13 @@ void KJsonWord::Export(QJsonObject & elem)
 	{
 		addTextToElem(elem, "color", QString::number(color));
 	}
-	if (birth >= 0)
+	if (begin >= 0)
 	{
-		addTextToElem(elem, "birth", QString::number(birth));
+		addTextToElem(elem, "begin", QString::number(begin));
 	}
-	if (duration >= 0)
+	if (end >= 0)
 	{
-		addTextToElem(elem, "duration", QString::number(duration));
+		addTextToElem(elem, "end", QString::number(end));
 	}
 	if (rubyhidden > 0)
 	{
@@ -275,15 +275,15 @@ bool KJsonSentence::ReadFromJson(const QJsonObject & elem)
 	{
 		color = colorText.toInt();
 	}
-	auto birthText = subTextForElem(elem, "birth");
-	if (!birthText.isEmpty())
+	auto beginText = subTextForElem(elem, "begin");
+	if (!beginText.isEmpty())
 	{
-		birth = birthText.toLongLong();
+		begin = beginText.toLongLong();
 	}
-	auto durationText = subTextForElem(elem, "duration");
-	if (!durationText.isEmpty())
+	auto endText = subTextForElem(elem, "end");
+	if (!endText.isEmpty())
 	{
-		duration = durationText.toLongLong();
+		end = endText.toLongLong();
 	}
 
 	normaltext = subTextForElem(elem, "normaltext");
@@ -314,13 +314,13 @@ void KJsonSentence::Export(QJsonObject & elem)
 	{
 		addTextToElem(elem, "color", QString::number(color));
 	}
-	if (birth >= 0)
+	if (begin >= 0)
 	{
-		addTextToElem(elem, "birth", QString::number(birth));
+		addTextToElem(elem, "begin", QString::number(begin));
 	}
-	if (duration >= 0)
+	if (end >= 0)
 	{
-		addTextToElem(elem, "duration", QString::number(duration));
+		addTextToElem(elem, "end", QString::number(end));
 	}
 
 	if (!normaltext.isEmpty())

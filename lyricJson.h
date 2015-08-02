@@ -73,13 +73,13 @@ public:
 	virtual void Clear() override
 	{
 		text = "";
-		birth = -1;
-		duration = -1;
+		begin = -1;
+		end = -1;
 	}
 
 	QString text;
-	qint64 birth = -1;	// done
-	qint64 duration = -1;	// no birth no duration OR all but last duration set
+	qint64 begin = -1;	// done
+	qint64 end = -1;	// no begin no end OR all but last end set
 };
 
 class KJsonWord : KJsonBase
@@ -93,16 +93,16 @@ public:
 	{
 		text = "";
 		color = -1;
-		birth = -1;
-		duration = -1;
+		begin = -1;
+		end = -1;
 		rubyhidden = 0;
 		rubylist.clear();
 	}
 
 	QString text;
 	int color = -1;	// done
-	qint64 birth = -1;	// first must, done
-	qint64 duration = -1;	// must set
+	qint64 begin = -1;	// first must, done
+	qint64 end = -1;	// must set
 	int rubyhidden = 0;	// no need to care
 	QList<KJsonRuby> rubylist;
 };
@@ -118,12 +118,12 @@ public:
 	{
 		line = -1;
 		color = -1;
-		birth = -1;
-		duration = -1;
+		begin = -1;
+		end = -1;
 		wordlist.clear();
 
-		_birthCalc = -1;
-		_durationCalc = -1;
+		_beginCalc = -1;
+		_endCalc = -1;
 
 		normaltext = "";
 		rubiedtext = "";
@@ -131,11 +131,11 @@ public:
 
 	int line = -1;	// done
 	int color = -1;	// done
-	qint64 birth = -1;	// last step
-	qint64 duration = -1;	// last step
+	qint64 begin = -1;	// last step
+	qint64 end = -1;	// last step
 
-	qint64 _birthCalc = -1;
-	qint64 _durationCalc = -1;
+	qint64 _beginCalc = -1;
+	qint64 _endCalc = -1;
 
 	QString normaltext;
 	QString rubiedtext;
@@ -186,8 +186,8 @@ private:
 	public:
 		ParagraphData(){}
 
-		qint64 birth = 0;
-		qint64 duration = 0;
+		qint64 begin = 0;
+		qint64 end = 0;
 	};
 
 	LyricJson();
@@ -220,7 +220,7 @@ private:
 	qint64 TimeStrToMS(const QString& timestr);
 	void writeAssLineToStream(QTextStream& stream, 
 		int rubyCount, int sentenceCode, 
-		qint64 birth, qint64 duration, 
+		qint64 begin, qint64 end, 
 		int line, int color, bool rubyHidden, 
 		const QString& text);
 

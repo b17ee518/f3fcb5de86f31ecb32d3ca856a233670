@@ -19,14 +19,8 @@ QString LyricJson::MStoTimeStr(qint64 msec)
 }
 
 
-void LyricJson::writeAssLineToStream(QTextStream& stream, int rubyCount, int sentenceCode, qint64 birth, qint64 duration, int line, int color, bool rubyHidden, const QString& text)
+void LyricJson::writeAssLineToStream(QTextStream& stream, int rubyCount, int sentenceCode, qint64 begin, qint64 end, int line, int color, bool rubyHidden, const QString& text)
 {
-	qint64 begin = birth;
-	qint64 end = -1;
-	if (duration > 0)
-	{
-		end = birth + duration;
-	}
 	QString beginStr = MStoTimeStr(begin);
 	QString endStr = MStoTimeStr(end);
 
@@ -127,13 +121,8 @@ bool LyricJson::loadASS(const QString& path)
 				text += "," + splited.at(i);
 			}
 
-			qint64 birth = TimeStrToMS(beginStr);
+			qint64 begin = TimeStrToMS(beginStr);
 			qint64 end = TimeStrToMS(endStr);
-			qint64 duration = -1;
-			if (end >= 0)
-			{
-				duration = end - birth;
-			}
 
 			bool rubyHidden = false;
 			int color = colorRubyHidden;
@@ -151,8 +140,8 @@ bool LyricJson::loadASS(const QString& path)
 				{
 					// begin of a sentence
 					KJsonSentence sentence;
-					sentence.birth = birth;
-					sentence.duration = duration;
+					sentence.begin = begin;
+					sentence.end = end;
 					sentence.color = color;
 					sentence.line = line;
 					sentence.normaltext = text;
@@ -176,16 +165,16 @@ bool LyricJson::loadASS(const QString& path)
 					Q_ASSERT(pWord);
 
 					KJsonRuby ruby;
-					ruby.birth = birth;
-					ruby.duration = duration;
+					ruby.begin = begin;
+					ruby.end = end;
 					ruby.text = text;
 					pWord->rubylist.append(ruby);
 
 					rubyCountdown--;
 					if (!rubyCountdown)
 					{
-						pWord->birth = pWord->rubylist.first().birth;
-						pWord->duration = pWord->rubylist.last().birth + pWord->rubylist.last().duration - pWord->birth;
+						pWord->begin = pWord->rubylist.first().begin;
+						pWord->end = pWord->rubylist.last().end;
 						pWord = NULL;
 					}
 				}
@@ -200,14 +189,15 @@ bool LyricJson::loadASS(const QString& path)
 						{
 							QString subtext = text[i];
 							KJsonWord word;
-							if (duration < 0 || birth < 0)
+							if (end < 0 || begin < 0)
 							{
-								word.birth = birth;
+								word.begin = begin;
 							}
 							else
 							{
-								word.birth = birth + i*duration / textcount;
-								word.duration = duration / textcount;
+								int duration = end - begin;
+								word.begin = begin + i*duration / textcount;
+								word.end = word.begin + duration / textcount;
 							}
 							word.color = color;
 							word.rubyhidden = rubyHidden;
@@ -221,8 +211,8 @@ bool LyricJson::loadASS(const QString& path)
 					{
 						// singles
 						KJsonWord word;
-						word.birth = birth;
-						word.duration = duration;
+						word.begin = begin;
+						word.end = end;
 						word.color = color;
 						word.rubyhidden = rubyHidden;
 						word.text = text;
@@ -289,16 +279,16 @@ void LyricJson::exportToASS(const QString& path, const QString& musicPath)
 	QString endStr;
 	Q_FOREACH(auto sentence, _song.lyric.sentencelist)
 	{
-		writeAssLineToStream(stream, 0, 1, sentence.birth, sentence.duration, sentence.line, sentence.color, false, sentence.normaltext);
+		writeAssLineToStream(stream, 0, 1, sentence.begin, sentence.end, sentence.line, sentence.color, false, sentence.normaltext);
 		Q_FOREACH(auto word, sentence.wordlist)
 		{
-			writeAssLineToStream(stream, word.rubylist.count(), 0, word.birth, word.duration, -1, word.color, word.rubyhidden, word.text);
+			writeAssLineToStream(stream, word.rubylist.count(), 0, word.begin, word.end, -1, word.color, word.rubyhidden, word.text);
 			Q_FOREACH(auto ruby, word.rubylist)
 			{
-				writeAssLineToStream(stream, 0, 0, ruby.birth, ruby.duration, -1, -1, false, ruby.text);
+				writeAssLineToStream(stream, 0, 0, ruby.begin, ruby.end, -1, -1, false, ruby.text);
 			}
 		}
-		writeAssLineToStream(stream, 0, 2, sentence.birth, sentence.duration, sentence.line, sentence.color, false, sentence.rubiedtext);
+		writeAssLineToStream(stream, 0, 2, sentence.begin, sentence.end, sentence.line, sentence.color, false, sentence.rubiedtext);
 	}
 
 	file.close();

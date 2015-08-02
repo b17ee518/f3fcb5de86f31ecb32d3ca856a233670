@@ -217,22 +217,22 @@ void LyricFrame::slotOnUpdateTimer()
 	// birth new
 	Q_FOREACH(auto sentence, song.lyric.sentencelist)
 	{
-		if (curMS >= sentence.birth && sentence.birth > _previousMSec && curMS < sentence.birth+sentence.duration)
+		if (curMS >= sentence.begin && sentence.begin > _previousMSec && curMS < sentence.end)
 		{
 			_sentences[sentence.line]->clearSentence();	// not needed
-			_sentences[sentence.line]->setClearTime(sentence.birth + sentence.duration);
+			_sentences[sentence.line]->setClearTime(sentence.end);
 
 			Q_FOREACH(auto word, sentence.wordlist)
 			{
 				auto kw = new KaraokeWord(NULL);
 				kw->setLyric(word.text);
-				kw->setBeginEnd(word.birth, word.birth + word.duration);
+				kw->setBeginEnd(word.begin, word.end);
 				kw->setRubyHidden(word.rubyhidden);
 				if (!word.rubylist.empty())
 				{
 					Q_FOREACH(auto ruby, word.rubylist)
 					{
-						kw->addRubyChar(ruby.text, ruby.birth, ruby.birth + ruby.duration);
+						kw->addRubyChar(ruby.text, ruby.begin, ruby.end);
 					}
 				}
 				//kw->setTextColor()

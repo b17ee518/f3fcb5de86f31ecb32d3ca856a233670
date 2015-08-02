@@ -77,7 +77,7 @@ void LyricJson::prepare()
 	}
 	// done
 
-	// add word birth time
+	// add word begin time
 	QLFOREACH_NONCONST(KJsonSentence, sentenceIt, _song.lyric.sentencelist)
 	{
 		if (sentenceIt->wordlist.empty())
@@ -85,18 +85,18 @@ void LyricJson::prepare()
 			continue;
 		}
 		// first word must set
-		Q_ASSERT(sentenceIt->wordlist.first().birth >= 0);
+		Q_ASSERT(sentenceIt->wordlist.first().begin >= 0);
 		for (QList<KJsonWord>::iterator it = sentenceIt->wordlist.begin(); it != sentenceIt->wordlist.end(); ++it)
 		{
 			// every word must have duration
 			//			qDebug("%s", it->text.toStdString().c_str());
-			Q_ASSERT(it->duration >= 0);
+			Q_ASSERT(it->end >= it->begin);
 			if (it != sentenceIt->wordlist.begin())
 			{
 				QList<KJsonWord>::iterator itPrev = std::prev(it);
-				if (it->birth < 0)
+				if (it->begin < 0)
 				{
-					it->birth = itPrev->birth + itPrev->duration;
+					it->begin = itPrev->end;
 				}
 			}
 			// set color
@@ -107,7 +107,7 @@ void LyricJson::prepare()
 		}
 	}
 
-	// set ruby birth duration
+	// set ruby begin end
 	QLFOREACH_NONCONST(KJsonSentence, sentenceIt, _song.lyric.sentencelist)
 	{
 		QLFOREACH_NONCONST(KJsonWord, wordIt, sentenceIt->wordlist)
@@ -116,65 +116,66 @@ void LyricJson::prepare()
 			{
 				continue;
 			}
-			// if no duration&birth
-			bool bNoDurationBirth = true;
+			// if no begin&end
+			bool bNoBeginEnd = true;
 			QLFOREACH_NONCONST(KJsonRuby, rubyIt, wordIt->rubylist)
 			{
-				if (rubyIt->duration > 0 || rubyIt->birth > 0)
+				if (rubyIt->end > 0 || rubyIt->begin > 0)
 				{
-					bNoDurationBirth = false;
+					bNoBeginEnd = false;
 					break;
 				}
 			}
 			// set evenly
 			int rubyCount = wordIt->rubylist.count();
-			if (bNoDurationBirth)
+			if (bNoBeginEnd)
 			{
+				int wordDuration = wordIt->end - wordIt->begin;
 				for (int i = 0; i < rubyCount; i++)
 				{
-					wordIt->rubylist[i].birth = wordIt->birth + (i*wordIt->duration) / rubyCount;
-					wordIt->rubylist[i].duration = wordIt->duration / rubyCount;
+					wordIt->rubylist[i].begin = wordIt->begin + i*wordDuration / rubyCount;
+					wordIt->rubylist[i].end = wordIt->rubylist[i].begin + wordDuration / rubyCount;
 				}
 			}
 			else
 			{
-				// set first birth
-				if (wordIt->rubylist[0].birth < 0)
+				// set first begin
+				if (wordIt->rubylist[0].begin < 0)
 				{
-					wordIt->rubylist[0].birth = wordIt->birth;
+					wordIt->rubylist[0].begin = wordIt->begin;
 				}
-				qint64 remainDuration = wordIt->duration;
-				qDebug("A%lld", wordIt->birth);
-				qDebug("A%lld", remainDuration);
+				qint64 remainDuration = wordIt->end - wordIt->begin;
+//				qDebug("A%lld", wordIt->begin);
+//				qDebug("A%lld", remainDuration);
 				for (int i = 1; i < rubyCount; i++)
 				{
-					// set this birth
-					qint64 lastDuration = wordIt->rubylist[i - 1].duration;
-					if (wordIt->rubylist[i].birth < 0)
+					// set this begin
+					qint64 lastDuration = wordIt->rubylist[i - 1].end - wordIt->rubylist[i - 1].begin;
+					if (wordIt->rubylist[i].begin < 0)
 					{
-						wordIt->rubylist[i].birth = wordIt->rubylist[i - 1].birth + lastDuration;
+						wordIt->rubylist[i].begin = wordIt->rubylist[i - 1].begin + lastDuration;
 					}
 					remainDuration -= lastDuration;
-					qDebug("B%lld", remainDuration);
-					qDebug("C%lld", lastDuration);
+//					qDebug("B%lld", remainDuration);
+//					qDebug("C%lld", lastDuration);
 					if (remainDuration < 0)
 					{
 						qDebug("%s", wordIt->text.toStdString().c_str());
 					}
 				}
 				// set last duration
-				if (wordIt->rubylist[rubyCount - 1].duration < 0)
+				if (wordIt->rubylist[rubyCount - 1].end < 0)
 				{
-					wordIt->rubylist[rubyCount - 1].duration = remainDuration;
+					wordIt->rubylist[rubyCount - 1].end = wordIt->rubylist[rubyCount - 1].begin + remainDuration;
 				}
 			}
 		}
 	}
 
-	// last set sentence birth/duration by paragraph
+	// last set sentence begin/end by paragraph
 	// by now sentence count should be maxline*N
 	Q_ASSERT(_song.lyric.sentencelist.count() % maxline == 0);
-	// first calc pseudo birth and duration
+	// first calc pseudo begin and end
 	QLFOREACH_NONCONST(KJsonSentence, sentenceIt, _song.lyric.sentencelist)
 	{
 		// TODO: empty sentences
@@ -184,25 +185,25 @@ void LyricJson::prepare()
 			continue;
 		}
 		// ignore if force set
-		Q_ASSERT((sentenceIt->birth >= 0) == (sentenceIt->duration >= 0));
-		if (sentenceIt->birth >= 0 && sentenceIt->duration >= 0)
+		Q_ASSERT((sentenceIt->begin >= 0) == (sentenceIt->end >= 0));
+		if (sentenceIt->begin >= 0 && sentenceIt->end >= 0)
 		{
-			sentenceIt->_birthCalc = sentenceIt->birth;
-			sentenceIt->_durationCalc = sentenceIt->duration;
+			sentenceIt->_beginCalc = sentenceIt->begin;
+			sentenceIt->_endCalc = sentenceIt->end;
 			continue;
 		}
-		qint64 minBirth = std::numeric_limits<qint64>::max();
+		qint64 minBegin = std::numeric_limits<qint64>::max();
 		qint64 duration = 0;
 		QLFOREACH_NONCONST(KJsonWord, wordIt, sentenceIt->wordlist)
 		{
-			if (wordIt->birth < minBirth)
+			if (wordIt->begin < minBegin)
 			{
-				minBirth = wordIt->birth;
+				minBegin = wordIt->begin;
 			}
-			duration += wordIt->duration;
+			duration += wordIt->end - wordIt->begin;
 		}
-		sentenceIt->_birthCalc = minBirth;
-		sentenceIt->_durationCalc = duration;
+		sentenceIt->_beginCalc = minBegin;
+		sentenceIt->_endCalc = duration + sentenceIt->_beginCalc;
 	}
 	// deal with empty sentences
 	int sentenceCount = _song.lyric.sentencelist.count();
@@ -213,7 +214,7 @@ void LyricJson::prepare()
 		{
 			int index = i*maxline + j;
 			auto sentence = &(_song.lyric.sentencelist[index]);
-			if (sentence->_birthCalc < 0 || sentence->_durationCalc < 0)
+			if (sentence->_beginCalc < 0 || sentence->_endCalc < 0)
 			{
 				// find nearest
 				int distance = maxline;
@@ -229,99 +230,99 @@ void LyricJson::prepare()
 					}
 					int nIndex = i*maxline + k;
 					auto nSentence = &(_song.lyric.sentencelist[nIndex]);
-					if (nSentence->_birthCalc < 0 || nSentence->_durationCalc < 0)
+					if (nSentence->_beginCalc < 0 || nSentence->_endCalc < 0)
 					{
 						continue;
 					}
-					sentence->_birthCalc = nSentence->_birthCalc;
-					sentence->_durationCalc = nSentence->_durationCalc;
+					sentence->_beginCalc = nSentence->_beginCalc;
+					sentence->_endCalc = nSentence->_endCalc;
 				}
 
-				Q_ASSERT(sentence->_birthCalc >= 0 && sentence->_durationCalc >= 0);
+				Q_ASSERT(sentence->_beginCalc >= 0 && sentence->_endCalc >= 0);
 			}
 		}
 	}
-	// done with pseudo birth and duration
+	// done with pseudo begin and end
 
-	// calc paragraph pseudo birth and duration
+	// calc paragraph pseudo begin and end
 	QList<ParagraphData> paragraphList;
 	for (int i = 0; i < paragraphCount; i++)
 	{
-		qint64 minBirth = std::numeric_limits<qint64>::max();
-		qint64 maxDie = 0;
+		qint64 minBegin = std::numeric_limits<qint64>::max();
+		qint64 maxEnd = 0;
 		for (int j = 0; j < maxline; j++)
 		{
 			int index = i*maxline + j;
 			auto sentence = &(_song.lyric.sentencelist[index]);
-			if (sentence->_birthCalc < minBirth)
+			if (sentence->_beginCalc < minBegin)
 			{
-				minBirth = sentence->_birthCalc;
+				minBegin = sentence->_beginCalc;
 			}
-			if (sentence->_birthCalc + sentence->_durationCalc > maxDie)
+			if (sentence->_endCalc > maxEnd)
 			{
-				maxDie = sentence->_birthCalc + sentence->_durationCalc;
+				maxEnd = sentence->_endCalc;
 			}
 		}
 		ParagraphData pdata;
-		pdata.birth = minBirth;
-		pdata.duration = maxDie - minBirth;
+		pdata.begin = minBegin;
+		pdata.end = maxEnd;
 		paragraphList.append(pdata);
 	}
 	auto setting = Settings::getInstance();
 
 	// first paragraph appears all at once
 	{
-		qint64 adjustedBirth = paragraphList[0].birth - setting->lyricLongFadeTimeMS;
-		if (adjustedBirth < 0)
+		qint64 adjustedBegin = paragraphList[0].begin - setting->lyricLongFadeTimeMS;
+		if (adjustedBegin < 0)
 		{
-			adjustedBirth = 0;
+			adjustedBegin = 0;
 		}
 		for (int i = 0; i < maxline; i++)
 		{
-			if (_song.lyric.sentencelist[i].birth < 0)
+			if (_song.lyric.sentencelist[i].begin < 0)
 			{
-				_song.lyric.sentencelist[i].birth = adjustedBirth;
+				_song.lyric.sentencelist[i].begin = adjustedBegin;
 			}
 		}
 	}
 
 	for (int i = 0; i < paragraphCount; i++)
 	{
-		// check every space to set previous's death and this birth!!!
+		// check every space to set previous's death and this begin!!!
 
-		qint64 previousDieTime = std::numeric_limits<qint64>::min();
+		qint64 previousEndTime = std::numeric_limits<qint64>::min();
 		if (i > 0)
 		{
-			previousDieTime = paragraphList[i - 1].birth + paragraphList[i - 1].duration;
+			previousEndTime = paragraphList[i - 1].end;
 		}
-		// process birth
+		// process begin
 		// if previous is long enough, cut previous all at once and this all at once
-		if (previousDieTime + setting->lyricShortFadeTimeMS < paragraphList[i].birth - setting->lyricLongFadeTimeMS)
+		if (previousEndTime + setting->lyricShortFadeTimeMS < paragraphList[i].begin - setting->lyricLongFadeTimeMS)
 		{
-			// set all this birth at once
-			qint64 adjustedBirth = paragraphList[i].birth - setting->lyricLongFadeTimeMS;
-			if (adjustedBirth < 0)
+			// set all this begin at once
+			qint64 adjustedBegin = paragraphList[i].begin - setting->lyricLongFadeTimeMS;
+			if (adjustedBegin < 0)
 			{
-				adjustedBirth = 0;
+				adjustedBegin = 0;
 			}
 			for (int j = 0; j < maxline; j++)
 			{
 				int index = i*maxline + j;
-				if (_song.lyric.sentencelist[index].birth < 0)
+				if (_song.lyric.sentencelist[index].begin < 0)
 				{
-					_song.lyric.sentencelist[index].birth = adjustedBirth;
+					_song.lyric.sentencelist[index].begin = adjustedBegin;
 				}
 			}
-			// set all previous die at once
+			// set all previous end at once
 			if (i > 0)
 			{
-				qint64 dieTime = paragraphList[i - 1].birth + paragraphList[i - 1].duration + setting->lyricShortFadeTimeMS;
+				qint64 endTime = paragraphList[i - 1].end + setting->lyricShortFadeTimeMS;
 				for (int j = 0; j < maxline; j++)
 				{
 					int index = (i - 1)*maxline + j;
-					if (_song.lyric.sentencelist[index].duration < 0)
+					if (_song.lyric.sentencelist[index].end < 0)
 					{
-						_song.lyric.sentencelist[index].duration = dieTime - _song.lyric.sentencelist[index].birth;
+						_song.lyric.sentencelist[index].end = endTime;
 					}
 				}
 			}
@@ -329,39 +330,39 @@ void LyricJson::prepare()
 		}
 		else
 		{
-			// flash change: this birth
+			// flash change: this begin
 			// i should > 0
 
 			// problems:
-			// this birth earlier than prev die
+			// this begin earlier than prev end
 
 			// WARNING omit too short cases?
 
-			// first several appear 2 sec front of last previous abs die
-			// previous die just before this emerge
+			// first several appear 2 sec front of last previous abs end
+			// previous end just before this emerge
 
 			int lastPreviousIndex = (i - 1)*maxline + maxline - 1;
 			Q_ASSERT(lastPreviousIndex >= 0);
-			qint64 lastPreviousDieTime = _song.lyric.sentencelist[lastPreviousIndex]._birthCalc + _song.lyric.sentencelist[lastPreviousIndex]._durationCalc;
+			qint64 lastPreviousEndTime = _song.lyric.sentencelist[lastPreviousIndex]._endCalc;
 
 			int thisLastIndex = i*maxline + maxline - 1;
 
-			qint64 firstSeveralBirth = lastPreviousDieTime - setting->lyricShortFadeTimeMS;
-			qint64 lastBirth = lastPreviousDieTime + setting->lyricShortFadeTimeMS;		// cause problems
-			qint64 prevFirstSeveralDie = firstSeveralBirth - setting->lyricRestIntervalMS; // cause problems
-			qint64 prevLastDie = lastBirth - setting->lyricRestIntervalMS;
+			qint64 firstSeveralBegin = lastPreviousEndTime - setting->lyricShortFadeTimeMS;
+			qint64 lastBegin = lastPreviousEndTime + setting->lyricShortFadeTimeMS;		// cause problems
+			qint64 prevFirstSeveralEnd = firstSeveralBegin - setting->lyricRestIntervalMS; // cause problems
+			qint64 prevLastEnd = lastBegin - setting->lyricRestIntervalMS;
 			for (int j = 0; j < maxline - 1; j++)
 			{
 				int index = i*maxline + j;
-				_song.lyric.sentencelist[index].birth = firstSeveralBirth;
-				Q_ASSERT(firstSeveralBirth <= _song.lyric.sentencelist[index]._birthCalc);
+				_song.lyric.sentencelist[index].begin = firstSeveralBegin;
+				Q_ASSERT(firstSeveralBegin <= _song.lyric.sentencelist[index]._beginCalc);
 				int lastIndex = (i - 1)*maxline + j;
-				_song.lyric.sentencelist[lastIndex].duration = prevFirstSeveralDie - _song.lyric.sentencelist[lastIndex].birth;
-				Q_ASSERT(firstSeveralBirth >= _song.lyric.sentencelist[lastIndex]._birthCalc + _song.lyric.sentencelist[lastIndex]._durationCalc);
+				_song.lyric.sentencelist[lastIndex].end = prevFirstSeveralEnd;
+				Q_ASSERT(firstSeveralBegin >= _song.lyric.sentencelist[lastIndex]._endCalc);
 			}
-			_song.lyric.sentencelist[(i + 1)*maxline - 1].birth = lastBirth;
+			_song.lyric.sentencelist[(i + 1)*maxline - 1].begin = lastBegin;
 
-			if (lastBirth > _song.lyric.sentencelist[(i + 1)*maxline - 1]._birthCalc)
+			if (lastBegin > _song.lyric.sentencelist[(i + 1)*maxline - 1]._beginCalc)
 			{
 				if (_song.lyric.sentencelist[(i + 1)*maxline - 1].wordlist.empty())
 				{
@@ -372,20 +373,20 @@ void LyricJson::prepare()
 					Q_ASSERT(false);
 				}
 			}
-			_song.lyric.sentencelist[i*maxline - 1].duration = prevLastDie - _song.lyric.sentencelist[i*maxline - 1].birth;
+			_song.lyric.sentencelist[i*maxline - 1].end = prevLastEnd;
 
 		}
 	}
 
 	// last paragraph disappears all at once
 	{
-		qint64 dieTime = paragraphList[paragraphCount - 1].birth + paragraphList[paragraphCount - 1].duration + setting->lyricShortFadeTimeMS;
+		qint64 endTime = paragraphList[paragraphCount - 1].end + setting->lyricShortFadeTimeMS;
 		for (int j = 0; j < maxline; j++)
 		{
 			int index = (paragraphCount - 1)*maxline + j;
-			if (_song.lyric.sentencelist[index].duration < 0)
+			if (_song.lyric.sentencelist[index].end < 0)
 			{
-				_song.lyric.sentencelist[index].duration = dieTime - _song.lyric.sentencelist[index].birth;
+				_song.lyric.sentencelist[index].end = endTime;
 			}
 		}
 	}

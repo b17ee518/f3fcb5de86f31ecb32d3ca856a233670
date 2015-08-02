@@ -1,9 +1,9 @@
-#include "LyricXML.h"
+#include "LyricJson.h"
 #include "Settings.h"
 
 #define QLFOREACH_NONCONST(CLASS, IT, LIST) for (QList<CLASS>::iterator IT=LIST.begin(); IT!=LIST.end(); ++IT)
 
-void LyricXML::prepare()
+void LyricJson::prepare()
 {
 	// maxline must greater or equal to 2
 	if (_song.general.maxline < 2)
@@ -23,10 +23,10 @@ void LyricXML::prepare()
 	{
 		_song.lyric.sentencelist.push_front(buildEmptyLine(i%maxline));
 	}
-	//	for (QList<KXMLSentence>::iterator it = _song.lyric.sentencelist.begin(); it != _song.lyric.sentencelist.end();)
+	//	for (QList<KJsonSentence>::iterator it = _song.lyric.sentencelist.begin(); it != _song.lyric.sentencelist.end();)
 	for (int i = 0; i < _song.lyric.sentencelist.size(); i++)
 	{
-		//		QList<KXMLSentence>::iterator itNext = std::next(it);
+		//		QList<KJsonSentence>::iterator itNext = std::next(it);
 
 		if (_song.lyric.sentencelist[i].line < 0)
 		{
@@ -78,7 +78,7 @@ void LyricXML::prepare()
 	// done
 
 	// add word birth time
-	QLFOREACH_NONCONST(KXMLSentence, sentenceIt, _song.lyric.sentencelist)
+	QLFOREACH_NONCONST(KJsonSentence, sentenceIt, _song.lyric.sentencelist)
 	{
 		if (sentenceIt->wordlist.empty())
 		{
@@ -86,14 +86,14 @@ void LyricXML::prepare()
 		}
 		// first word must set
 		Q_ASSERT(sentenceIt->wordlist.first().birth >= 0);
-		for (QList<KXMLWord>::iterator it = sentenceIt->wordlist.begin(); it != sentenceIt->wordlist.end(); ++it)
+		for (QList<KJsonWord>::iterator it = sentenceIt->wordlist.begin(); it != sentenceIt->wordlist.end(); ++it)
 		{
 			// every word must have duration
 			//			qDebug("%s", it->text.toStdString().c_str());
-			Q_ASSERT(it->duration > 0);
+			Q_ASSERT(it->duration >= 0);
 			if (it != sentenceIt->wordlist.begin())
 			{
-				QList<KXMLWord>::iterator itPrev = std::prev(it);
+				QList<KJsonWord>::iterator itPrev = std::prev(it);
 				if (it->birth < 0)
 				{
 					it->birth = itPrev->birth + itPrev->duration;
@@ -108,9 +108,9 @@ void LyricXML::prepare()
 	}
 
 	// set ruby birth duration
-	QLFOREACH_NONCONST(KXMLSentence, sentenceIt, _song.lyric.sentencelist)
+	QLFOREACH_NONCONST(KJsonSentence, sentenceIt, _song.lyric.sentencelist)
 	{
-		QLFOREACH_NONCONST(KXMLWord, wordIt, sentenceIt->wordlist)
+		QLFOREACH_NONCONST(KJsonWord, wordIt, sentenceIt->wordlist)
 		{
 			if (wordIt->rubylist.empty())
 			{
@@ -118,7 +118,7 @@ void LyricXML::prepare()
 			}
 			// if no duration&birth
 			bool bNoDurationBirth = true;
-			QLFOREACH_NONCONST(KXMLRuby, rubyIt, wordIt->rubylist)
+			QLFOREACH_NONCONST(KJsonRuby, rubyIt, wordIt->rubylist)
 			{
 				if (rubyIt->duration > 0 || rubyIt->birth > 0)
 				{
@@ -175,7 +175,7 @@ void LyricXML::prepare()
 	// by now sentence count should be maxline*N
 	Q_ASSERT(_song.lyric.sentencelist.count() % maxline == 0);
 	// first calc pseudo birth and duration
-	QLFOREACH_NONCONST(KXMLSentence, sentenceIt, _song.lyric.sentencelist)
+	QLFOREACH_NONCONST(KJsonSentence, sentenceIt, _song.lyric.sentencelist)
 	{
 		// TODO: empty sentences
 		if (sentenceIt->wordlist.empty())
@@ -193,7 +193,7 @@ void LyricXML::prepare()
 		}
 		qint64 minBirth = std::numeric_limits<qint64>::max();
 		qint64 duration = 0;
-		QLFOREACH_NONCONST(KXMLWord, wordIt, sentenceIt->wordlist)
+		QLFOREACH_NONCONST(KJsonWord, wordIt, sentenceIt->wordlist)
 		{
 			if (wordIt->birth < minBirth)
 			{

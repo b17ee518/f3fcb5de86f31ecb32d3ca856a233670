@@ -6,10 +6,12 @@
 #include "helperkaraokelabel.h"
 #include "karaokeword.h"
 
-#include "LyricXML.h"
+#include "LyricJson.h"
 #include "Settings.h"
 #include <QGraphicsVideoItem>
 #include <QGraphicsView>
+
+#include <QFileInfo>
 
 MainWindow* MainWindow::s_mainWindow = NULL;
 
@@ -33,8 +35,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->lyricFrame->setMoveHandlingWidget(this);
 	//
 	loadMusic("e:/Karaoke/temp/testLrc.mp3");
-//	loadLRC("e:/Karaoke\temp/testLrc.lrc");
-//	loadXML("e:/Karaoke/f3fcb5de86f31ecb32d3ca856a233670/resource/test.xml");
 }
 
 MainWindow::~MainWindow()
@@ -105,28 +105,40 @@ void MainWindow::previousSong()
 
 }
 
-bool MainWindow::loadXML(const QString& path)
+bool MainWindow::loadJson(const QString& path)
 {
-	return LyricXML::getInstance()->loadXML(path);
+	return LyricJson::getInstance()->loadJson(path);
 }
 
-bool MainWindow::loadLRC(const QString& path)
+bool MainWindow::loadLRC(const QString& path, const QString& musicPath)
 {
-	return LyricXML::getInstance()->loadLRC(path);
+	return LyricJson::getInstance()->loadLRC(path, musicPath);
+}
+
+bool MainWindow::loadASS(const QString& path)
+{
+	return LyricJson::getInstance()->loadASS(path);
 }
 
 void MainWindow::loadMusic(const QString& path)
 {
 	QFileInfo info(path);
 	QString strBase = info.absolutePath() + "/" + info.completeBaseName();
-	QString xmlName = strBase + Settings::getInstance()->xmlExtention;
-	if (!QFile().exists(xmlName))
+	QString jsonName = strBase + Settings::getInstance()->jsonExtention;
+	if (!QFile().exists(jsonName))
 	{
-		loadLRC(strBase + ".lrc");
+		if (QFile().exists(strBase+".ass"))
+		{
+			loadASS(strBase + ".ass");
+		}
+		else
+		{
+			loadLRC(strBase + ".lrc", path);
+		}
 	}
 	else
 	{
-		loadXML(xmlName);
+		loadJson(jsonName);
 	}
 	_player->setMedia(QUrl::fromLocalFile(path));
 }

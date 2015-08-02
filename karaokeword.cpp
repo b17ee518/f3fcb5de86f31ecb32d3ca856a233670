@@ -85,7 +85,9 @@ void KaraokeWord::act(qint64 curMS)
 	{
 		if (_rubyList.empty())
 		{
-			updateProportion(((qreal)(curMS - _beginMS)) / ((qreal)(_endMS - _beginMS)));
+			qreal adjustedProp = ((qreal)(curMS - _beginMS)) / ((qreal)(_endMS - _beginMS));
+			adjustedProp = (adjustedProp + Settings::getInstance()->lyricFastIntroProp) / (1.0 + Settings::getInstance()->lyricFastIntroProp);
+			updateProportion(adjustedProp);
 		}
 		else
 		{

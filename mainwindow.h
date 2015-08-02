@@ -33,8 +33,9 @@ public:
 	void nextSong();
 	void previousSong();
 
-	bool loadXML(const QString& path);
-	bool loadLRC(const QString& path);
+	bool loadJson(const QString& path);
+	bool loadLRC(const QString& path, const QString& musicPath);
+	bool loadASS(const QString& path);
 
 	void loadMusic(const QString& path);
 

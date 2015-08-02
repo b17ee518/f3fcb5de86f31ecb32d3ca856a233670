@@ -22,7 +22,7 @@ public:
 
 	void setMaxSentences(int count);
 
-	void BuildByXML();
+	void BuildByJson();
 
 	void Play();
 	void Pause();

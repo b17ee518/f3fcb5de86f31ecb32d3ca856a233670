@@ -183,10 +183,11 @@
     </ClCompile>
     <ClCompile Include="helperkaraokelabel.cpp" />
     <ClCompile Include="karaokeword.cpp" />
+    <ClCompile Include="lyricASS.cpp" />
     <ClCompile Include="lyricframe.cpp" />
     <ClCompile Include="lyricLRC.cpp" />
     <ClCompile Include="lyricPrepare.cpp" />
-    <ClCompile Include="lyricXML.cpp" />
+    <ClCompile Include="lyricJson.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mainwindow.cpp" />
     <ClCompile Include="qdirectslider.cpp" />
@@ -229,7 +230,7 @@ endlocal
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeneratedFiles\ui_mainwindow.h" />
-    <ClInclude Include="lyricXML.h" />
+    <ClInclude Include="lyricJson.h" />
     <CustomBuild Include="qdirectslider.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing qdirectslider.h...</Message>

@@ -47,6 +47,7 @@ public:
 	const qreal rubyVSpaceMax = 15.0;
 	const qreal standardFontSize = 40.0;
 	const int beginMarginSpaceChar = 3;
+	const qreal lyricFastIntroProp = 0.5;
 
 	const qint64 lyricLongFadeTimeMS = 2000;
 	const qint64 lyricEndSentenceTimeMS = 60000;
@@ -54,7 +55,7 @@ public:
 	const qint64 lyricRestIntervalMS = 200;
 //	const qreal lyricVeryShortIntervalScale = 0.1; omit now
 
-	const char* xmlExtention = ".xml";
+	const char* jsonExtention = ".json";
 
 private:
 	qreal _fontSize = standardFontSize;

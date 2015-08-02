@@ -1,69 +1,69 @@
-#include "LyricXML.h"
+#include "LyricJson.h"
 #include "Settings.h"
 
 
-LyricXML::LyricXML()
+LyricJson::LyricJson()
 {
 }
 
 
-LyricXML::~LyricXML()
+LyricJson::~LyricJson()
 {
 }
 
-bool LyricXML::loadXML(const QString& path)
+bool LyricJson::loadJson(const QString& path)
 {
-	QDomDocument document;
+	QJsonDocument document;
 
 	QFile file(path);
 	if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
 	{
 		return false;
 	}
-	if (!document.setContent(&file))
+	QJsonParseError error;
+	document = QJsonDocument::fromJson(file.readAll(), &error);
+	file.close();
+	if (error.error != QJsonParseError::NoError)
 	{
 		return false;
 	}
-	file.close();
 
-	QDomElement root = document.firstChildElement();
+	QJsonObject  root = document.object();
 	_song.Clear();
-	_song.ReadFromXML(root);
+	_song.ReadFromJson(root);
 	prepare();
 
 	return true;
 }
 
-void LyricXML::exportToXML(const QString& path)
+void LyricJson::exportToJson(const QString& path)
 {
 	QFile file(path);
 	if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
 	{
 		return;
 	}
-	QDomDocument doc;
-	QDomProcessingInstruction instr = doc.createProcessingInstruction(
-		"xml", "version='1.0' encoding='UTF-8'");
-	doc.appendChild(instr);
-	QDomElement songNode = doc.createElement("song");
+	QJsonDocument doc;
+	QJsonObject  songNode;
 	_song.Export(songNode);
-	doc.appendChild(songNode);
+	doc.setObject(songNode);
 	QTextStream stream(&file);
 	stream.setGenerateByteOrderMark(true);
-	stream << doc.toString();
+	stream << doc.toJson(/*QJsonDocument::Compact*/);
 	file.close();
 }
 
-KXMLSentence LyricXML::buildEmptyLine(int lineNum)
+KJsonSentence LyricJson::buildEmptyLine(int lineNum)
 {
-	KXMLSentence sentence;
+	KJsonSentence sentence;
 	sentence.line = lineNum;
 	sentence.color = 0;
 	return sentence;
 }
 
-QString KXMLBase::subTextForElem(const QDomElement& elem, const QString& name)
+QString KJsonBase::subTextForElem(const QJsonObject & elem, const QString& name)
 {
+	/*
 	auto elements = elem.elementsByTagName(name);
 	if (!elements.count())
 	{
@@ -77,18 +77,27 @@ QString KXMLBase::subTextForElem(const QDomElement& elem, const QString& name)
 		}
 	}
 	return "";
+	*/
+	if (elem.contains(name))
+	{
+		return elem[name].toString();
+	}
+	return "";
 }
 
-void KXMLBase::addTextToElem(QDomElement& elem, const QString& name, const QString& text)
+void KJsonBase::addTextToElem(QJsonObject & elem, const QString& name, const QString& text)
 {
+	elem[name] = text;
+	/*
 	QDomDocument doc = elem.ownerDocument();
-	QDomElement node = doc.createElement(name);
+	QJsonObject  node = doc.createElement(name);
 	QDomText textDom = doc.createTextNode(text);
 	node.appendChild(textDom);
 	elem.appendChild(node);
+	*/
 }
 
-bool KXMLInfo::ReadFromXML(const QDomElement& elem)
+bool KJsonInfo::ReadFromJson(const QJsonObject & elem)
 {
 	title = subTextForElem(elem, "title");
 	author = subTextForElem(elem, "author");
@@ -100,7 +109,7 @@ bool KXMLInfo::ReadFromXML(const QDomElement& elem)
 	return true;
 }
 
-void KXMLInfo::Export(QDomElement& elem)
+void KJsonInfo::Export(QJsonObject & elem)
 {
 	if (!title.isEmpty())
 	{
@@ -128,7 +137,7 @@ void KXMLInfo::Export(QDomElement& elem)
 	}
 }
 
-bool KXMLGeneral::ReadFromXML(const QDomElement& elem)
+bool KJsonGeneral::ReadFromJson(const QJsonObject & elem)
 {
 	auto maxlineText = subTextForElem(elem, "maxline");
 	if (!maxlineText.isEmpty())
@@ -144,7 +153,7 @@ bool KXMLGeneral::ReadFromXML(const QDomElement& elem)
 	return true;
 }
 
-void KXMLGeneral::Export(QDomElement& elem)
+void KJsonGeneral::Export(QJsonObject & elem)
 {
 	addTextToElem(elem, "maxline", QString::number(maxline));
 	if (offset != 0)
@@ -153,7 +162,7 @@ void KXMLGeneral::Export(QDomElement& elem)
 	}
 }
 
-bool KXMLRuby::ReadFromXML(const QDomElement& elem)
+bool KJsonRuby::ReadFromJson(const QJsonObject & elem)
 {
 	text = subTextForElem(elem, "text");
 	auto birthText = subTextForElem(elem, "birth");
@@ -170,7 +179,7 @@ bool KXMLRuby::ReadFromXML(const QDomElement& elem)
 	return true;
 }
 
-void KXMLRuby::Export(QDomElement& elem)
+void KJsonRuby::Export(QJsonObject & elem)
 {
 	addTextToElem(elem, "text", text);
 	if (birth >= 0)
@@ -183,7 +192,7 @@ void KXMLRuby::Export(QDomElement& elem)
 	}
 }
 
-bool KXMLWord::ReadFromXML(const QDomElement& elem)
+bool KJsonWord::ReadFromJson(const QJsonObject & elem)
 {
 	text = subTextForElem(elem, "text");
 	auto colorText = subTextForElem(elem, "color");
@@ -206,18 +215,22 @@ bool KXMLWord::ReadFromXML(const QDomElement& elem)
 	{
 		rubyhidden = rubyhiddenText.toInt();
 	}
-	auto rubies = elem.elementsByTagName("ruby");
-	for (int i = 0; i < rubies.count(); i++)
+	auto rubies = elem["ruby"];
+	if (rubies.isArray())
 	{
-		KXMLRuby ruby;
-		ruby.ReadFromXML(rubies.at(i).toElement());
-		rubylist.append(ruby);
+		auto rubyArray = rubies.toArray();
+		for (int i = 0; i < rubyArray.count(); i++)
+		{
+			KJsonRuby ruby;
+			ruby.ReadFromJson(rubyArray.at(i).toObject());
+			rubylist.append(ruby);
+		}
 	}
 
 	return true;
 }
 
-void KXMLWord::Export(QDomElement& elem)
+void KJsonWord::Export(QJsonObject & elem)
 {
 	addTextToElem(elem, "text", text);
 	if (color >= 0)
@@ -237,16 +250,20 @@ void KXMLWord::Export(QDomElement& elem)
 		addTextToElem(elem, "rubyhidden", QString::number(rubyhidden));
 	}
 
-	QDomDocument doc = elem.ownerDocument();
+	QJsonArray rubyArray;
 	Q_FOREACH(auto ruby, rubylist)
 	{
-		QDomElement rubyNode = doc.createElement("ruby");
+		QJsonObject  rubyNode;
 		ruby.Export(rubyNode);
-		elem.appendChild(rubyNode);
+		rubyArray.append(rubyNode);
+	}
+	if (rubyArray.size())
+	{
+		elem["ruby"] = rubyArray;
 	}
 }
 
-bool KXMLSentence::ReadFromXML(const QDomElement& elem)
+bool KJsonSentence::ReadFromJson(const QJsonObject & elem)
 {
 	auto lineText = subTextForElem(elem, "line");
 	if (!lineText.isEmpty())
@@ -272,18 +289,22 @@ bool KXMLSentence::ReadFromXML(const QDomElement& elem)
 	normaltext = subTextForElem(elem, "normaltext");
 	rubiedtext = subTextForElem(elem, "rubiedtext");
 
-	auto words = elem.elementsByTagName("word");
-	for (int i = 0; i < words.count(); i++)
+	auto words = elem["word"];
+	if (words.isArray())
 	{
-		KXMLWord word;
-		word.ReadFromXML(words.at(i).toElement());
-		wordlist.append(word);
+		auto wordArray = words.toArray();
+		for (int i = 0; i < wordArray.count(); i++)
+		{
+			KJsonWord word;
+			word.ReadFromJson(wordArray.at(i).toObject());
+			wordlist.append(word);
+		}
 	}
 
 	return true;
 }
 
-void KXMLSentence::Export(QDomElement& elem)
+void KJsonSentence::Export(QJsonObject & elem)
 {
 	if (line >= 0)
 	{
@@ -311,72 +332,74 @@ void KXMLSentence::Export(QDomElement& elem)
 		addTextToElem(elem, "rubiedtext", rubiedtext);
 	}
 
-	QDomDocument doc = elem.ownerDocument();
+	QJsonArray wordArray;
 	Q_FOREACH(auto word, wordlist)
 	{
-		QDomElement wordNode = doc.createElement("word");
+		QJsonObject  wordNode;
 		word.Export(wordNode);
-		elem.appendChild(wordNode);
+		wordArray.append(wordNode);
 	}
-
+	if (wordArray.size())
+	{
+		elem["word"] = wordArray;
+	}
 }
 
-bool KXMLLyric::ReadFromXML(const QDomElement& elem)
+bool KJsonLyric::ReadFromJson(const QJsonObject & elem)
 {
-	auto sentences = elem.elementsByTagName("sentence");
-	for (int i = 0; i < sentences.count(); i++)
+	auto sentences = elem["sentence"];
+	if (sentences.isArray())
 	{
-		KXMLSentence sentence;
-		sentence.ReadFromXML(sentences.at(i).toElement());
-		sentencelist.append(sentence);
+		auto sentenceArray = sentences.toArray();
+		for (int i = 0; i < sentenceArray.count(); i++)
+		{
+			KJsonSentence sentence;
+			sentence.ReadFromJson(sentenceArray.at(i).toObject());
+			sentencelist.append(sentence);
+		}
 	}
 
 	return true;
 }
 
-void KXMLLyric::Export(QDomElement& elem)
+void KJsonLyric::Export(QJsonObject & elem)
 {
-	QDomDocument doc = elem.ownerDocument();
+	QJsonArray sentenceArray;
 	Q_FOREACH(auto sentence, sentencelist)
 	{
-		QDomElement sentenceNode = doc.createElement("sentence");
+		QJsonObject  sentenceNode;
 		sentence.Export(sentenceNode);
-		elem.appendChild(sentenceNode);
+		sentenceArray.append(sentenceNode);
+	}
+	if (sentenceArray.size())
+	{
+		elem["sentence"] = sentenceArray;
 	}
 }
 
-bool KXMLSong::ReadFromXML(const QDomElement& elem)
+bool KJsonSong::ReadFromJson(const QJsonObject & elem)
 {
-	auto infos = elem.elementsByTagName("info");
-	if (infos.count())
-	{
-		info.ReadFromXML(infos.at(0).toElement());
-	}
-	auto generals = elem.elementsByTagName("general");
-	if (generals.count())
-	{
-		general.ReadFromXML(generals.at(0).toElement());
-	}
-	auto lyrics = elem.elementsByTagName("lyric");
-	if (lyrics.count())
-	{
-		return lyric.ReadFromXML(lyrics.at(0).toElement());
-	}
-	return false;
+	auto infoObj = elem["info"].toObject();
+	info.ReadFromJson(infoObj);
+
+	auto generalObj = elem["general"].toObject();
+	general.ReadFromJson(generalObj);
+
+	auto lyricObj = elem["lyric"].toObject();
+	return lyric.ReadFromJson(lyricObj);
 }
 
-void KXMLSong::Export(QDomElement& elem)
+void KJsonSong::Export(QJsonObject & elem)
 {
-	QDomDocument doc = elem.ownerDocument();
-	QDomElement infoNode = doc.createElement("info");
+	QJsonObject  infoNode;
 	info.Export(infoNode);
-	elem.appendChild(infoNode);
+	elem["info"] = infoNode;
 
-	QDomElement generalNode = doc.createElement("general");
+	QJsonObject  generalNode;
 	general.Export(generalNode);
-	elem.appendChild(generalNode);
+	elem["general"] = generalNode;
 
-	QDomElement lyricNode = doc.createElement("lyric");
+	QJsonObject  lyricNode;
 	lyric.Export(lyricNode);
-	elem.appendChild(lyricNode);
+	elem["lyric"] = lyricNode;
 }

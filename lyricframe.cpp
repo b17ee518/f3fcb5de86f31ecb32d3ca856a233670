@@ -8,7 +8,7 @@
 #include "Settings.h"
 
 #include "karaokeword.h"
-#include "LyricXML.h"
+#include "LyricJson.h"
 
 #include "mainwindow.h"
 
@@ -86,9 +86,9 @@ void LyricFrame::setMaxSentences(int count)
 	}
 }
 
-void LyricFrame::BuildByXML()
+void LyricFrame::BuildByJson()
 {
-	auto song = LyricXML::getInstance()->song();
+	auto song = LyricJson::getInstance()->song();
 	setMaxSentences(song.general.maxline);
 }
 
@@ -161,7 +161,7 @@ void LyricFrame::showEvent(QShowEvent *e)
 	static bool bInited = false;
 	if (!bInited)
 	{
-		BuildByXML();
+		BuildByJson();
 	}
 }
 
@@ -186,7 +186,7 @@ void LyricFrame::slotMovingUpdateTimer()
 void LyricFrame::slotOnUpdateTimer()
 {
 	//
-	auto song = LyricXML::getInstance()->song();
+	auto song = LyricJson::getInstance()->song();
 //	qint64 curMS = _elapsedTimer->elapsed() - song.general.offset;
 	qint64 curMS = MainWindow::mainWindow()->playerPosition();
 

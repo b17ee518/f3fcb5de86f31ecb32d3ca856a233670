@@ -119,13 +119,16 @@
     <ClCompile Include="GeneratedFiles\Release\moc_qdirectslider.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
-    <ClCompile Include="lyricXML.cpp">
-      <Filter>Source Files\lyricFiles</Filter>
-    </ClCompile>
     <ClCompile Include="lyricLRC.cpp">
       <Filter>Source Files\lyricFiles</Filter>
     </ClCompile>
     <ClCompile Include="lyricPrepare.cpp">
+      <Filter>Source Files\lyricFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="lyricJson.cpp">
+      <Filter>Source Files\lyricFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="lyricASS.cpp">
       <Filter>Source Files\lyricFiles</Filter>
     </ClCompile>
   </ItemGroup>
@@ -164,7 +167,7 @@
     <ClInclude Include="GeneratedFiles\ui_mainwindow.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="lyricXML.h">
+    <ClInclude Include="lyricJson.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,7 +1,10 @@
-#include "LyricXML.h"
+#include "LyricJson.h"
 #include "Settings.h"
 
-bool LyricXML::loadLRC(const QString& path)
+#include <QFileInfo>
+#include <QTime>
+
+bool LyricJson::loadLRC(const QString& path, const QString& musicPath)
 {
 	QFile infile(path);
 	if (!infile.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -56,8 +59,8 @@ bool LyricXML::loadLRC(const QString& path)
 			QTime beginTime = QTime::fromString(controlPart + "0", "mm:ss.zzz");
 			qint64 begin = beginTime.msecsSinceStartOfDay();
 
-			KXMLSentence sentence;
-			KXMLWord word;
+			KJsonSentence sentence;
+			KJsonWord word;
 			word.birth = begin;
 			word.duration = settings->maximumDuration(); //std::numeric_limits<qint64>::max();
 			word.text = line.right(line.length() - indexOfClose - 1);
@@ -94,7 +97,7 @@ bool LyricXML::loadLRC(const QString& path)
 
 			if (!_song.lyric.sentencelist.empty())
 			{
-				KXMLWord& lastword = _song.lyric.sentencelist.last().wordlist.last();
+				KJsonWord& lastword = _song.lyric.sentencelist.last().wordlist.last();
 				if (lastword.duration > settings->minimumDuration())
 				{
 					lastword.duration = begin - lastword.birth;
@@ -107,17 +110,20 @@ bool LyricXML::loadLRC(const QString& path)
 	lrcWordSeparate();
 
 	QFileInfo info(path);
-	QString strXML = info.absolutePath() + "/" + info.completeBaseName() + ".xml";
-	exportToXML(strXML);
+	QString strBase = info.absolutePath() + "/" + info.completeBaseName();
+	QString strJson = strBase + settings->jsonExtention;
+	exportToJson(strJson);
 
-	loadXML(strXML);
+	exportToASS(strBase + ".ass", musicPath);
+
+	loadJson(strJson);
 	//	prepare();
 	return true;
 }
 
-void LyricXML::lrcWordSeparate()
+void LyricJson::lrcWordSeparate()
 {
-	for (QList<KXMLSentence>::iterator sentenceIt = _song.lyric.sentencelist.begin(); sentenceIt != _song.lyric.sentencelist.end(); ++sentenceIt)
+	for (QList<KJsonSentence>::iterator sentenceIt = _song.lyric.sentencelist.begin(); sentenceIt != _song.lyric.sentencelist.end(); ++sentenceIt)
 	{
 		if (sentenceIt->wordlist.count() != 1)
 		{
@@ -153,7 +159,7 @@ void LyricXML::lrcWordSeparate()
 				for (int i = 0; i < searchedIndex; i++)
 				{
 					// build normal word
-					KXMLWord word;
+					KJsonWord word;
 					word.text = iterText.at(i);
 					sentenceIt->wordlist.append(word);
 
@@ -172,11 +178,11 @@ void LyricXML::lrcWordSeparate()
 				normalText += kanjiText;
 				rubiedText += rubyText;
 
-				KXMLWord word;
+				KJsonWord word;
 				word.text = kanjiText;
 				for (int i = 0; i < rubyText.length(); i++)
 				{
-					KXMLRuby ruby;
+					KJsonRuby ruby;
 					ruby.text = rubyText[i];
 					word.rubylist.append(ruby);
 				}
@@ -189,15 +195,19 @@ void LyricXML::lrcWordSeparate()
 			{
 				for (int i = 0; i < iterText.length(); i++)
 				{
+					// white space no adding count
 					// build normal word
-					KXMLWord word;
+					KJsonWord word;
 					word.text = iterText.at(i);
 					sentenceIt->wordlist.append(word);
 
 					normalText += word.text;
 					rubiedText += word.text;
 
-					wordRubyCount++;
+					if (!word.text.trimmed().isEmpty())
+					{
+						wordRubyCount++;
+					}
 				}
 				break;
 			}
@@ -224,7 +234,14 @@ void LyricXML::lrcWordSeparate()
 			}
 			else
 			{
-				sentenceIt->wordlist[i].duration = totalDuration / wordRubyCount;
+				if (!sentenceIt->wordlist[i].text.trimmed().isEmpty())
+				{
+					sentenceIt->wordlist[i].duration = totalDuration / wordRubyCount;
+				}
+				else
+				{
+					sentenceIt->wordlist[i].duration = 0;
+				}
 			}
 			curCount++;
 		}

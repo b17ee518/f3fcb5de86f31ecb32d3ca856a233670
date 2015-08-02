@@ -54,6 +54,11 @@ void KaraokeWord::setBeginEnd(qint64 beginMS, qint64 endMS)
 	}
 }
 
+void KaraokeWord::setIsControlText(bool bValue)
+{
+	_isControlText = bValue;
+}
+
 void KaraokeWord::updateProportion(qreal prop)
 {
 	if (_proportion != prop)
@@ -73,6 +78,12 @@ void KaraokeWord::updateProportion(qreal prop)
 
 void KaraokeWord::act(qint64 curMS)
 {
+	if (_isControlText)
+	{
+		updateProportion(1);
+		return;
+	}
+
 	if (curMS <= _beginMS)
 	{
 		updateProportion(0);

@@ -182,7 +182,22 @@ bool LyricJson::loadASS(const QString& path)
 				{
 					// it's a word
 					int textcount = text.count();
-					if (layer == 0 && textcount > 1)
+					bool isControlText = false;
+					if (text.startsWith("[") && text.endsWith("]"))
+					{
+						QString testText = text.mid(1, textcount - 2);
+						if (testText == "title"
+							|| testText == "artist"
+							|| testText == "author"
+							|| testText == "album"
+							|| testText == "by"
+							|| testText == "description")
+						{
+							isControlText = true;
+							// treat as single
+						}
+					}
+					if (layer == 0 && textcount > 1 && (!isControlText))
 					{
 						// separate to several
 						for (int i = 0; i < textcount; i++)

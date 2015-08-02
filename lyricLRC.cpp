@@ -144,65 +144,95 @@ void LyricJson::lrcWordSeparate()
 		QString rubiedText;
 
 		sentenceIt->wordlist.clear();
-		while (true)
+
+		bool bControlWord = false;
+		if (text.startsWith("[") && text.endsWith("]"))
 		{
-			int searchedIndex = iterText.indexOf(reg);
-			if (searchedIndex >= 0)
+			QString testText = text.mid(1, text.count() - 2);
+			if (testText == "title"
+				|| testText == "artist"
+				|| testText == "author"
+				|| testText == "album"
+				|| testText == "by"
+				|| testText == "description")
 			{
-				for (int i = 0; i < searchedIndex; i++)
-				{
-					// build normal word
-					KJsonWord word;
-					word.text = iterText.at(i);
-					sentenceIt->wordlist.append(word);
-
-					normalText += word.text;
-					rubiedText += word.text;
-
-					wordRubyCount++;
-				}
-				iterText = iterText.right(iterText.length() - searchedIndex - 1);
-				// [ already cut
-				int separatorIndex = iterText.indexOf("|");
-				int closeIndex = iterText.indexOf("]", separatorIndex);
-				QString kanjiText = iterText.left(separatorIndex);
-				QString rubyText = iterText.mid(separatorIndex + 1, closeIndex - separatorIndex - 1);
-
-				normalText += kanjiText;
-				rubiedText += rubyText;
-
-				KJsonWord word;
-				word.text = kanjiText;
-				for (int i = 0; i < rubyText.length(); i++)
-				{
-					KJsonRuby ruby;
-					ruby.text = rubyText[i];
-					word.rubylist.append(ruby);
-				}
-				wordRubyCount += rubyText.length();
-				sentenceIt->wordlist.append(word);
-
-				iterText = iterText.right(iterText.length() - closeIndex - 1);
+				bControlWord = true;
 			}
-			else
+		}
+		if (bControlWord)
+		{
+			// build normal word
+			KJsonWord word;
+			word.text = text;
+			sentenceIt->wordlist.append(word);
+
+			wordRubyCount = 1;
+
+			normalText = text;
+			rubiedText = text;
+		}
+		else
+		{
+			while (true)
 			{
-				for (int i = 0; i < iterText.length(); i++)
+				int searchedIndex = iterText.indexOf(reg);
+				if (searchedIndex >= 0)
 				{
-					// white space no adding count
-					// build normal word
-					KJsonWord word;
-					word.text = iterText.at(i);
-					sentenceIt->wordlist.append(word);
-
-					normalText += word.text;
-					rubiedText += word.text;
-
-					if (!word.text.trimmed().isEmpty())
+					for (int i = 0; i < searchedIndex; i++)
 					{
+						// build normal word
+						KJsonWord word;
+						word.text = iterText.at(i);
+						sentenceIt->wordlist.append(word);
+
+						normalText += word.text;
+						rubiedText += word.text;
+
 						wordRubyCount++;
 					}
+					iterText = iterText.right(iterText.length() - searchedIndex - 1);
+					// [ already cut
+					int separatorIndex = iterText.indexOf("|");
+					int closeIndex = iterText.indexOf("]", separatorIndex);
+					QString kanjiText = iterText.left(separatorIndex);
+					QString rubyText = iterText.mid(separatorIndex + 1, closeIndex - separatorIndex - 1);
+
+					normalText += kanjiText;
+					rubiedText += rubyText;
+
+					KJsonWord word;
+					word.text = kanjiText;
+					for (int i = 0; i < rubyText.length(); i++)
+					{
+						KJsonRuby ruby;
+						ruby.text = rubyText[i];
+						word.rubylist.append(ruby);
+					}
+					wordRubyCount += rubyText.length();
+					sentenceIt->wordlist.append(word);
+
+					iterText = iterText.right(iterText.length() - closeIndex - 1);
 				}
-				break;
+				else
+				{
+					for (int i = 0; i < iterText.length(); i++)
+					{
+						// white space no adding count
+						// build normal word
+						KJsonWord word;
+						word.text = iterText.at(i);
+						sentenceIt->wordlist.append(word);
+
+						normalText += word.text;
+						rubiedText += word.text;
+
+						if (!word.text.trimmed().isEmpty())
+						{
+							wordRubyCount++;
+						}
+					}
+					break;
+				}
 			}
 		}
 

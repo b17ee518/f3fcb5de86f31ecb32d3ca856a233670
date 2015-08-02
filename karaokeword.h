@@ -18,6 +18,8 @@ public:
 	void setTextColor(const QColor& preTextColor, const QColor& preStrokeColor, const QColor& postTextColor, const QColor& postStrokeColor);
 	void setBeginEnd(qint64 beginMS, qint64 endMS);
 
+	void setIsControlText(bool bValue);
+
 	void act(qint64 curMS);
 
 	void addRubyChar(const QString& rubyText, qint64 beginMS, qint64 endMS);
@@ -59,6 +61,7 @@ private:
 	qreal _rubyOffset = 0.0;
 
 	bool _isRubyHidden = false;
+	bool _isControlText = false;
 
 	bool _locked = false;
 };

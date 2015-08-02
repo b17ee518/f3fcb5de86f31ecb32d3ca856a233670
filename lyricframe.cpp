@@ -225,7 +225,39 @@ void LyricFrame::slotOnUpdateTimer()
 			Q_FOREACH(auto word, sentence.wordlist)
 			{
 				auto kw = new KaraokeWord(NULL);
-				kw->setLyric(word.text);
+				
+				auto wordText = word.text;
+				if (wordText.startsWith("[") && wordText.endsWith("]"))
+				{
+					auto testText = wordText.mid(1, wordText.length() - 2);
+					if (testText == "title")
+					{
+						wordText = song.info.title;
+					}
+					else if (testText == "artist")
+					{
+						wordText = song.info.artist;
+					}
+					else if (testText == "album")
+					{
+						wordText = song.info.album;
+					}
+					else if (testText == "by")
+					{
+						wordText = song.info.by;
+					}
+					else if (testText == "author")
+					{
+						wordText = song.info.author;
+					}
+					else if (testText == "description")
+					{
+						wordText = song.info.description;
+					}
+					kw->setIsControlText(true);
+				}
+				kw->setLyric(wordText);
+
 				kw->setBeginEnd(word.begin, word.end);
 				kw->setRubyHidden(word.rubyhidden);
 				if (!word.rubylist.empty())
@@ -239,7 +271,7 @@ void LyricFrame::slotOnUpdateTimer()
 				_sentences[sentence.line]->addWord(kw);
 				if (sentence.line < 2)
 				{
-					if (!s_firstSentenceDoneFlag[sentence.line] && word.text.length())
+					if (!s_firstSentenceDoneFlag[sentence.line] && wordText.length())
 					{
 						// reset minimum
 						_sentences[sentence.line]->settingsChanged();

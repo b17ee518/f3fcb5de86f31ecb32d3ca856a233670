@@ -47,7 +47,7 @@ public:
 	const qreal rubyVSpaceMax = 15.0;
 	const qreal standardFontSize = 40.0;
 	const int beginMarginSpaceChar = 3;
-	const qreal lyricFastIntroProp = 0.5;
+	const qreal lyricFastIntroProp = 0.3;
 
 	const qint64 lyricLongFadeTimeMS = 2000;
 	const qint64 lyricEndSentenceTimeMS = 60000;
@@ -59,7 +59,7 @@ public:
 
 private:
 	qreal _fontSize = standardFontSize;
-	QString _fontName = "MS PGothic";
+	QString _fontName = "Meiryo";
 
 
 signals:

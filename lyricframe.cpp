@@ -27,6 +27,8 @@ LyricFrame::LyricFrame(QWidget *parent)
 	
 	setMaxSentences(2);
 
+	this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
 	_pSizeGripLB = new QSizeGrip(this);
 	_pSizeGripRB = new QSizeGrip(this);
 
@@ -56,7 +58,7 @@ void LyricFrame::setMaxSentences(int count)
 {
 	if (_sentences.size() != count)
 	{
-		_sentences.clear();
+		clearSentences();
 		for (int i = 0; i < count; i++)
 		{
 			auto sentence = new SentenceHolder(this);
@@ -84,6 +86,15 @@ void LyricFrame::setMaxSentences(int count)
 		}
 		this->setMinimumHeight(Settings::getInstance()->minimumHeightForLine(count));
 	}
+}
+
+void LyricFrame::clearSentences()
+{
+	for (int i = 0; i < _sentences.size(); i++)
+	{
+		delete _sentences[i];
+	}
+	_sentences.clear();
 }
 
 void LyricFrame::BuildByJson()
@@ -186,6 +197,8 @@ void LyricFrame::slotMovingUpdateTimer()
 void LyricFrame::slotOnUpdateTimer()
 {
 	//
+	static bool s_firstSentenceDoneFlag[2] = {false, false};
+
 	auto song = LyricJson::getInstance()->song();
 //	qint64 curMS = _elapsedTimer->elapsed() - song.general.offset;
 	qint64 curMS = MainWindow::mainWindow()->playerPosition();
@@ -224,6 +237,14 @@ void LyricFrame::slotOnUpdateTimer()
 				}
 				//kw->setTextColor()
 				_sentences[sentence.line]->addWord(kw);
+				if (sentence.line < 2)
+				{
+					if (!s_firstSentenceDoneFlag[sentence.line] && word.text.length())
+					{
+						// reset minimum
+						_sentences[sentence.line]->settingsChanged();
+					}
+				}
 			}
 		}
 	}

@@ -12,6 +12,8 @@ SentenceHolder::SentenceHolder(QWidget *parent)
 	_layout->setSpacing(0);
 //	_layout->setContentsMargins(0, 0, 0, 0);
 	_layout->setAlignment(Qt::AlignLeft);
+
+	this->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	
 	_horizontalSpacer = new QSpacerItem(0, 0);
 	_layout->addSpacerItem(_horizontalSpacer);
@@ -89,6 +91,7 @@ void SentenceHolder::act(qint64 curMS)
 
 void SentenceHolder::settingsChanged()
 {
+	this->setMinimumHeight(0);
 	Q_FOREACH(auto child, children())
 	{
 		KaraokeWord *karaoke = dynamic_cast<KaraokeWord *>(child);
@@ -101,4 +104,6 @@ void SentenceHolder::settingsChanged()
 	{
 		_horizontalSpacer->changeSize(_beginMarginSpace*Settings::getInstance()->majorScale(), 0);
 	}
+	updateGeometry();
+	this->setMinimumHeight(height());
 }

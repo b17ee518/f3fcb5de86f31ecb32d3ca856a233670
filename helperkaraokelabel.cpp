@@ -169,7 +169,7 @@ void HelperKaraokeLabel::paintEvent(QPaintEvent *e)
 
 	QSizeF size = this->rect().size();
 	auto setting = Settings::getInstance();
-	qreal y = size.height() + (_isRuby ? (-setting->rubyVSpace()) : (-setting->verticalSpace)) -1;
+	qreal y = size.height()*0.75 + (_isRuby ? /*(-setting->rubyVSpace())*/0 : (-setting->verticalSpace)) -1;
 
 	QPainter painter(this);
 

@@ -21,6 +21,7 @@ public:
 	void stopMoving();
 
 	void setMaxSentences(int count);
+	void clearSentences();
 
 	void BuildByJson();
 

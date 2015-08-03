@@ -10,10 +10,16 @@
 #include "Settings.h"
 #include <QGraphicsVideoItem>
 #include <QGraphicsView>
+#include <QDesktopWidget>
+#include <QMoveEvent>
 
 #include <QFileInfo>
 
 MainWindow* MainWindow::s_mainWindow = NULL;
+
+#define ICONPATH_PLAY	":/button/play"
+#define ICONPATH_PAUSE	":/button/pause"
+#define ICONPATH_STOP	":/button/stop"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -26,13 +32,19 @@ MainWindow::MainWindow(QWidget *parent) :
 	setAttribute(Qt::WA_TranslucentBackground);
 	this->setStyleSheet("background-color: rgba(0, 0, 0, 2);");
 
+	auto scrGeo = QApplication::desktop()->screenGeometry();
+	this->setMaximumSize(scrGeo.size());
+
 	_player = new QMediaPlayer(this);
 	connect(_player, SIGNAL(positionChanged(qint64)), this, SLOT(updateTimeElapsedSlider(qint64)));
 	connect(_player, SIGNAL(durationChanged(qint64)), this, SLOT(setDuration(qint64)));
 	connect(ui->positionSlider, SIGNAL(directJumped(int)), this, SLOT(on_positionHorizontalSlider_sliderMoved(int)));
+	connect(ui->volumeSlider, SIGNAL(directJumped(int)), this, SLOT(on_volumeHorizontalSlider_sliderMoved(int)));
 
 	setVolume(ui->volumeSlider->value());
 	ui->lyricFrame->setMoveHandlingWidget(this);
+
+	resetPlayPauseState();
 	//
 	loadMusic("e:/Karaoke/temp/testLrc.mp3");
 }
@@ -66,18 +78,35 @@ void MainWindow::play()
 {
 	_player->play();
 	ui->lyricFrame->Play();
+
+	QIcon icon;
+	icon.addFile(QStringLiteral(ICONPATH_PAUSE), QSize(), QIcon::Normal, QIcon::Off);
+	ui->playPauseButton->setIcon(icon);
 }
 
 void MainWindow::pause()
 {
 	_player->pause();
 	ui->lyricFrame->Pause();
+	
+	resetPlayPauseState();
 }
 
 void MainWindow::stop()
 {
 	_player->stop();
 	ui->lyricFrame->Stop();
+
+	resetPlayPauseState();
+}
+
+void MainWindow::resetPlayPauseState()
+{
+	ui->playPauseButton->setChecked(false);
+
+	QIcon icon;
+	icon.addFile(QStringLiteral(ICONPATH_PLAY), QSize(), QIcon::Normal, QIcon::Off);
+	ui->playPauseButton->setIcon(icon);
 }
 
 bool MainWindow::isPaused()
@@ -165,9 +194,53 @@ void MainWindow::leaveEvent(QEvent *e)
 //	setAttribute(Qt::WA_TranslucentBackground);
 }
 
+void MainWindow::moveEvent(QMoveEvent *e)
+{
+	QRect triedRect = QRect(e->pos(), this->rect().size());
+	moveIntoScreen(triedRect);
+}
+
+void MainWindow::resizeEvent(QResizeEvent *e)
+{
+	QRect triedRect = QRect(this->pos(), e->size());
+	moveIntoScreen(triedRect);
+}
+
+void MainWindow::moveIntoScreen(QRect triedRect)
+{
+	auto desktop = QApplication::desktop();
+	auto scrGeo = desktop->availableGeometry();
+	QPoint ptBottomRight = triedRect.bottomRight();
+	qreal moveX = 0;
+	qreal moveY = 0;
+
+	// multiple screen probs.
+	/*
+	if (ptBottomRight.x() > scrGeo.right())
+	{
+	moveX = -(ptBottomRight.x() - (scrGeo.right()));
+	if (e->pos().x() + moveX < scrGeo.x())
+	{
+	moveX = 0;
+	}
+	}
+	*/
+	if (ptBottomRight.y() > scrGeo.bottom())
+	{
+		moveY = scrGeo.bottom() - ptBottomRight.y();
+	}
+	if (moveX != 0.0 || moveY != 0.0)
+	{
+		move(triedRect.left() + moveX, triedRect.top() + moveY);
+	}
+}
+
+
 void MainWindow::updateTimeElapsedSlider(qint64 percent)
 {
+	_bUpdatingPositionHorizontalSlider = true;
 	ui->positionSlider->setValue(percent);
+	_bUpdatingPositionHorizontalSlider = false;
 }
 
 void MainWindow::setDuration(qint64 duration)
@@ -182,7 +255,7 @@ void MainWindow::slotOnCloseButtonClicked()
 
 void MainWindow::slotOnVolumeSliderValueChanged(int value)
 {
-
+	on_volumeHorizontalSlider_sliderMoved(value);
 }
 
 void MainWindow::slotOnLoopSwitchButtonClicked()
@@ -192,7 +265,7 @@ void MainWindow::slotOnLoopSwitchButtonClicked()
 
 void MainWindow::slotOnPositionSliderValueChanged(int value)
 {
-
+	on_positionHorizontalSlider_sliderMoved(value);
 }
 
 void MainWindow::slotOnNextButtonClicked()
@@ -238,5 +311,13 @@ void MainWindow::on_positionHorizontalSlider_sliderMoved(int position)
 		play();
 		pause();
 	}
-	ui->lyricFrame->Jumped(oldPosition);
+	if (!_bUpdatingPositionHorizontalSlider)
+	{
+		ui->lyricFrame->Jumped(oldPosition);
+	}
+}
+
+void MainWindow::on_volumeHorizontalSlider_sliderMoved(int position)
+{
+	setVolume(position);
 }

@@ -58,7 +58,7 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QStringLiteral("MainWindow"));
-        MainWindow->resize(800, 200);
+        MainWindow->resize(1074, 200);
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         verticalLayout = new QVBoxLayout(centralWidget);
@@ -90,6 +90,10 @@ public:
         listButton->setSizePolicy(sizePolicy1);
         listButton->setMinimumSize(QSize(48, 24));
         listButton->setMaximumSize(QSize(48, 24));
+        QIcon icon;
+        icon.addFile(QStringLiteral(":/button/list"), QSize(), QIcon::Normal, QIcon::Off);
+        listButton->setIcon(icon);
+        listButton->setIconSize(QSize(28, 20));
         listButton->setCheckable(true);
 
         horizontalLayout->addWidget(listButton);
@@ -104,7 +108,13 @@ public:
         playPauseButton->setSizePolicy(sizePolicy1);
         playPauseButton->setMinimumSize(QSize(24, 24));
         playPauseButton->setMaximumSize(QSize(24, 24));
+        QIcon icon1;
+        icon1.addFile(QStringLiteral(":/button/play"), QSize(), QIcon::Normal, QIcon::Off);
+        icon1.addFile(QStringLiteral(":/button/play"), QSize(), QIcon::Selected, QIcon::Off);
+        playPauseButton->setIcon(icon1);
+        playPauseButton->setIconSize(QSize(15, 20));
         playPauseButton->setCheckable(true);
+        playPauseButton->setFlat(false);
 
         horizontalLayout->addWidget(playPauseButton);
 
@@ -114,6 +124,10 @@ public:
         stopButton->setSizePolicy(sizePolicy1);
         stopButton->setMinimumSize(QSize(24, 24));
         stopButton->setMaximumSize(QSize(24, 24));
+        QIcon icon2;
+        icon2.addFile(QStringLiteral(":/button/stop"), QSize(), QIcon::Normal, QIcon::Off);
+        stopButton->setIcon(icon2);
+        stopButton->setIconSize(QSize(16, 16));
 
         horizontalLayout->addWidget(stopButton);
 
@@ -125,8 +139,12 @@ public:
         previousButton->setObjectName(QStringLiteral("previousButton"));
         sizePolicy1.setHeightForWidth(previousButton->sizePolicy().hasHeightForWidth());
         previousButton->setSizePolicy(sizePolicy1);
-        previousButton->setMinimumSize(QSize(24, 24));
-        previousButton->setMaximumSize(QSize(24, 24));
+        previousButton->setMinimumSize(QSize(30, 24));
+        previousButton->setMaximumSize(QSize(30, 24));
+        QIcon icon3;
+        icon3.addFile(QStringLiteral(":/button/prev"), QSize(), QIcon::Normal, QIcon::Off);
+        previousButton->setIcon(icon3);
+        previousButton->setIconSize(QSize(32, 18));
 
         horizontalLayout->addWidget(previousButton);
 
@@ -134,8 +152,12 @@ public:
         nextButton->setObjectName(QStringLiteral("nextButton"));
         sizePolicy1.setHeightForWidth(nextButton->sizePolicy().hasHeightForWidth());
         nextButton->setSizePolicy(sizePolicy1);
-        nextButton->setMinimumSize(QSize(24, 24));
-        nextButton->setMaximumSize(QSize(24, 24));
+        nextButton->setMinimumSize(QSize(30, 24));
+        nextButton->setMaximumSize(QSize(30, 24));
+        QIcon icon4;
+        icon4.addFile(QStringLiteral(":/button/next"), QSize(), QIcon::Normal, QIcon::Off);
+        nextButton->setIcon(icon4);
+        nextButton->setIconSize(QSize(32, 18));
 
         horizontalLayout->addWidget(nextButton);
 
@@ -174,6 +196,10 @@ public:
         loopSwitchButton->setSizePolicy(sizePolicy1);
         loopSwitchButton->setMinimumSize(QSize(36, 24));
         loopSwitchButton->setMaximumSize(QSize(36, 24));
+        QIcon icon5;
+        icon5.addFile(QStringLiteral(":/button/allloop"), QSize(), QIcon::Normal, QIcon::Off);
+        loopSwitchButton->setIcon(icon5);
+        loopSwitchButton->setIconSize(QSize(24, 24));
 
         horizontalLayout->addWidget(loopSwitchButton);
 
@@ -203,6 +229,9 @@ public:
         closeButton->setSizePolicy(sizePolicy1);
         closeButton->setMinimumSize(QSize(24, 24));
         closeButton->setMaximumSize(QSize(24, 24));
+        QIcon icon6;
+        icon6.addFile(QStringLiteral(":/button/close"), QSize(), QIcon::Normal, QIcon::Off);
+        closeButton->setIcon(icon6);
 
         horizontalLayout->addWidget(closeButton);
 
@@ -240,14 +269,14 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", 0));
-        listButton->setText(QApplication::translate("MainWindow", "List", 0));
-        playPauseButton->setText(QApplication::translate("MainWindow", "\342\226\266", 0));
-        stopButton->setText(QApplication::translate("MainWindow", "\342\226\240", 0));
-        previousButton->setText(QApplication::translate("MainWindow", "<", 0));
-        nextButton->setText(QApplication::translate("MainWindow", ">", 0));
+        listButton->setText(QString());
+        playPauseButton->setText(QString());
+        stopButton->setText(QString());
+        previousButton->setText(QString());
+        nextButton->setText(QString());
         timeLabel->setText(QApplication::translate("MainWindow", "--:--/--:--", 0));
-        loopSwitchButton->setText(QApplication::translate("MainWindow", "\342\227\213", 0));
-        closeButton->setText(QApplication::translate("MainWindow", "X", 0));
+        loopSwitchButton->setText(QString());
+        closeButton->setText(QString());
     } // retranslateUi
 
 };

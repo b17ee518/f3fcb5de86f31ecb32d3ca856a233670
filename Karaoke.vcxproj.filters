@@ -48,6 +48,14 @@
     <Filter Include="Source Files\lyricFiles">
       <UniqueIdentifier>{b0c8b449-ef5f-4101-bba0-57d8139d7b0a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{41b1136c-7a32-4b07-9b9a-c5bb270daf30}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{D9D6E242-F8AF-46E4-B9FD-80ECBC20BA3E}</UniqueIdentifier>
+      <Extensions>qrc;*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -131,6 +139,9 @@
     <ClCompile Include="lyricASS.cpp">
       <Filter>Source Files\lyricFiles</Filter>
     </ClCompile>
+    <ClCompile Include="GeneratedFiles\qrc_Resources.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="mainwindow.h">
@@ -157,6 +168,9 @@
     <CustomBuild Include="qdirectslider.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
+    <CustomBuild Include="Resources.qrc">
+      <Filter>Resources</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="mainwindow.ui">
@@ -170,5 +184,16 @@
     <ClInclude Include="lyricJson.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Resources\play.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\pause.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\stop.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

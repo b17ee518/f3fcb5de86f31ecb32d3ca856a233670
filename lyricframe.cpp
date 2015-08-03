@@ -4,6 +4,7 @@
 #include <QApplication>
 #include <QResizeEvent>
 #include <QVBoxLayout>
+#include <QDesktopWidget>
 
 #include "Settings.h"
 
@@ -20,7 +21,7 @@ LyricFrame::LyricFrame(QWidget *parent)
 {
 	_pMovingUpdateTimer = new QTimer(this);
 	connect(_pMovingUpdateTimer, SIGNAL(timeout()), this, SLOT(slotMovingUpdateTimer()));
-	
+		
 	_layout = new QVBoxLayout(this);
 	_layout->setSpacing(0);
 	_layout->setMargin(0);
@@ -86,6 +87,11 @@ void LyricFrame::setMaxSentences(int count)
 		}
 		this->setMinimumHeight(Settings::getInstance()->minimumHeightForLine(count));
 	}
+
+	/*
+	auto scrGeo = QApplication::desktop()->screenGeometry();
+	MainWindow::mainWindow()->setMaximumHeight(scrGeo.width()*count / Settings::getInstance()->lineMaxCharAspec);
+	*/
 }
 
 void LyricFrame::clearSentences()

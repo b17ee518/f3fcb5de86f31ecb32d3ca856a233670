@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>1074</width>
     <height>200</height>
    </rect>
   </property>
@@ -87,7 +87,17 @@
           </size>
          </property>
          <property name="text">
-          <string>List</string>
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="Resources.qrc">
+           <normaloff>:/button/list</normaloff>:/button/list</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>28</width>
+           <height>20</height>
+          </size>
          </property>
          <property name="checkable">
           <bool>true</bool>
@@ -131,10 +141,24 @@
           </size>
          </property>
          <property name="text">
-          <string>▶</string>
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="Resources.qrc">
+           <normaloff>:/button/play</normaloff>
+           <selectedoff>:/button/play</selectedoff>:/button/play</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>15</width>
+           <height>20</height>
+          </size>
          </property>
          <property name="checkable">
           <bool>true</bool>
+         </property>
+         <property name="flat">
+          <bool>false</bool>
          </property>
         </widget>
        </item>
@@ -159,7 +183,17 @@
           </size>
          </property>
          <property name="text">
-          <string>■</string>
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="Resources.qrc">
+           <normaloff>:/button/stop</normaloff>:/button/stop</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>16</width>
+           <height>16</height>
+          </size>
          </property>
         </widget>
        </item>
@@ -189,18 +223,28 @@
          </property>
          <property name="minimumSize">
           <size>
-           <width>24</width>
+           <width>30</width>
            <height>24</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>24</width>
+           <width>30</width>
            <height>24</height>
           </size>
          </property>
          <property name="text">
-          <string>&lt;</string>
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="Resources.qrc">
+           <normaloff>:/button/prev</normaloff>:/button/prev</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>32</width>
+           <height>18</height>
+          </size>
          </property>
         </widget>
        </item>
@@ -214,18 +258,28 @@
          </property>
          <property name="minimumSize">
           <size>
-           <width>24</width>
+           <width>30</width>
            <height>24</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
-           <width>24</width>
+           <width>30</width>
            <height>24</height>
           </size>
          </property>
          <property name="text">
-          <string>&gt;</string>
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="Resources.qrc">
+           <normaloff>:/button/next</normaloff>:/button/next</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>32</width>
+           <height>18</height>
+          </size>
          </property>
         </widget>
        </item>
@@ -342,7 +396,17 @@
           </size>
          </property>
          <property name="text">
-          <string>○</string>
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="Resources.qrc">
+           <normaloff>:/button/allloop</normaloff>:/button/allloop</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>24</width>
+           <height>24</height>
+          </size>
          </property>
         </widget>
        </item>
@@ -430,7 +494,11 @@
           </size>
          </property>
          <property name="text">
-          <string>X</string>
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="Resources.qrc">
+           <normaloff>:/button/close</normaloff>:/button/close</iconset>
          </property>
         </widget>
        </item>
@@ -481,7 +549,9 @@
    <header>qdirectslider.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="Resources.qrc"/>
+ </resources>
  <connections>
   <connection>
    <sender>closeButton</sender>

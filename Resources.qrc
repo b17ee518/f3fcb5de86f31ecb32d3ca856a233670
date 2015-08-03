@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/button">
+      <file alias="play">Resources/play.png</file>
+      <file alias="pause">Resources/pause.png</file>
+      <file alias="stop">Resources/stop.png</file>
+      
+      <file alias="next">Resources/next.png</file>
+      <file alias="prev">Resources/prev.png</file>
+      
+      <file alias="list">Resources/list.png</file>
+      <file alias="setting">Resources/setting.png</file>
+      
+      <file alias="shuffle">Resources/shuffle.png</file>
+      <file alias="singleloop">Resources/singleloop.png</file>
+      <file alias="allloop">Resources/allloop.png</file>
+
+      <file alias="close">Resources/close.png</file>
+    </qresource>
+</RCC>

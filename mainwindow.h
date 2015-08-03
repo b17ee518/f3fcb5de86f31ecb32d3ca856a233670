@@ -25,6 +25,8 @@ public:
 	void pause();
 	void stop();
 
+	void resetPlayPauseState();
+
 	bool isPaused();
 
 	void setVolume(int vol);
@@ -45,20 +47,27 @@ public:
 protected:
 	void enterEvent(QEvent *e) override;
 	void leaveEvent(QEvent *e) override;
+	void moveEvent(QMoveEvent *e) override;
+	void resizeEvent(QResizeEvent *e) override;
 	
 protected slots:
 	void updateTimeElapsedSlider(qint64 percent);
 	void setDuration(qint64 duration);
 	
 private:
+	void moveIntoScreen(QRect triedRect);
+
+private:
     Ui::MainWindow *ui;
 
 	QMediaPlayer* _player = NULL;
 	bool _isPlaying = false;
 
+	bool _bUpdatingPositionHorizontalSlider = false;
+
 	static MainWindow* s_mainWindow;
 	
-	protected slots:
+protected slots:
 
 	void slotOnCloseButtonClicked();
 	void slotOnVolumeSliderValueChanged(int value);
@@ -71,6 +80,8 @@ private:
 	void slotOnListButtonToggled(bool bChecked);
 
 	void on_positionHorizontalSlider_sliderMoved(int position);
+	void on_volumeHorizontalSlider_sliderMoved(int position);
+
 };
 
 #endif // MAINWINDOW_H

@@ -55,6 +55,8 @@ public:
 	const qint64 lyricRestIntervalMS = 200;
 //	const qreal lyricVeryShortIntervalScale = 0.1; omit now
 
+	const int lineMaxCharAspec = 25;
+
 	const char* jsonExtention = ".json";
 
 private:

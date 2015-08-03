@@ -191,7 +191,8 @@ bool LyricJson::loadASS(const QString& path)
 							|| testText == "author"
 							|| testText == "album"
 							|| testText == "by"
-							|| testText == "description")
+							|| testText == "description"
+							|| testText.startsWith("control:"))
 						{
 							isControlText = true;
 							// treat as single

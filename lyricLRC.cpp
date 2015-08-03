@@ -154,7 +154,8 @@ void LyricJson::lrcWordSeparate()
 				|| testText == "author"
 				|| testText == "album"
 				|| testText == "by"
-				|| testText == "description")
+				|| testText == "description"
+				|| testText.startsWith("control:"))
 			{
 				bControlWord = true;
 			}

@@ -260,6 +260,10 @@ void LyricFrame::slotOnUpdateTimer()
 					{
 						wordText = song.info.description;
 					}
+					else if (testText.startsWith("control:"))
+					{
+						wordText = testText.right(testText.length() - 8);
+					}
 					kw->setIsControlText(true);
 				}
 				kw->setLyric(wordText);

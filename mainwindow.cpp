@@ -42,9 +42,10 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(_player, SIGNAL(positionChanged(qint64)), this, SLOT(updateTimeElapsedSlider(qint64)));
 	connect(_player, SIGNAL(durationChanged(qint64)), this, SLOT(setDuration(qint64)));
 	connect(_player, SIGNAL(mediaStatusChanged(QMediaPlayer::MediaStatus)), this, SLOT(slotOnMediaStatusChanged(QMediaPlayer::MediaStatus)));
+	/*
 	connect(ui->positionSlider, SIGNAL(directJumped(int)), this, SLOT(on_positionHorizontalSlider_sliderMoved(int)));
 	connect(ui->volumeSlider, SIGNAL(directJumped(int)), this, SLOT(on_volumeHorizontalSlider_sliderMoved(int)));
-
+	*/
 	setVolume(Settings::getInstance()->volume());
 
 	ui->lyricFrame->setMoveHandlingWidget(this);
@@ -90,7 +91,9 @@ void MainWindow::play()
 	QIcon icon;
 	icon.addFile(QStringLiteral(ICONPATH_PAUSE), QSize(), QIcon::Normal, QIcon::Off);
 	ui->playPauseButton->setIcon(icon);
+	ui->playPauseButton->blockSignals(true);
 	ui->playPauseButton->setChecked(true);
+	ui->playPauseButton->blockSignals(false);
 }
 
 void MainWindow::pause()
@@ -113,7 +116,9 @@ void MainWindow::stop()
 
 void MainWindow::resetPlayPauseState()
 {
+	ui->playPauseButton->blockSignals(true);
 	ui->playPauseButton->setChecked(false);
+	ui->playPauseButton->blockSignals(false);
 
 	QIcon icon;
 	icon.addFile(QStringLiteral(ICONPATH_PLAY), QSize(), QIcon::Normal, QIcon::Off);
@@ -226,6 +231,7 @@ void MainWindow::loadMusic(const QString& path, qint64 beginOffset)
 	}
 
 	settings->setLastPlayedFileName(path);
+	this->setWindowTitle(Settings::getInstance()->getSongName(path));
 	/*
 	QFileInfo info(path);
 	QString strBase = info.absolutePath() + "/" + info.completeBaseName();
@@ -419,12 +425,20 @@ void MainWindow::on_positionHorizontalSlider_sliderMoved(int position)
 		qint64 oldPosition = playerPosition();
 		setPlayerPosition(position);
 
+		ui->lyricFrame->Jumped(oldPosition);
 		if (bPaused)
 		{
-			play();
-			pause();
+			QTimer* pauseTimer = new QTimer(this);
+			_player->setMuted(true);
+			connect(pauseTimer, &QTimer::timeout, [this, pauseTimer]()
+			{
+				this->play();
+				this->pause();
+				this->_player->setMuted(false);
+				delete pauseTimer;
+			});
+			pauseTimer->start(250);
 		}
-		ui->lyricFrame->Jumped(oldPosition);
 	}
 }
 

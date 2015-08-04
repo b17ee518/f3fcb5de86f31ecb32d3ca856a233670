@@ -206,8 +206,7 @@ void LyricFrame::slotOnUpdateTimer()
 	static bool s_firstSentenceDoneFlag[2] = {false, false};
 
 	auto song = LyricJson::getInstance()->song();
-//	qint64 curMS = _elapsedTimer->elapsed() - song.general.offset;
-	qint64 curMS = MainWindow::mainWindow()->playerPosition();
+	qint64 curMS = MainWindow::mainWindow()->playerPosition() - song.general.offset - Settings::getInstance()->visualOffset();
 
 	// die old
 	if (_sentences.size())
@@ -236,35 +235,46 @@ void LyricFrame::slotOnUpdateTimer()
 				if (wordText.startsWith("[") && wordText.endsWith("]"))
 				{
 					auto testText = wordText.mid(1, wordText.length() - 2);
+					bool bIsControlText = false;
 					if (testText == "title")
 					{
 						wordText = song.info.title;
+						bIsControlText = true;
 					}
 					else if (testText == "artist")
 					{
 						wordText = song.info.artist;
+						bIsControlText = true;
 					}
 					else if (testText == "album")
 					{
 						wordText = song.info.album;
+						bIsControlText = true;
 					}
 					else if (testText == "by")
 					{
 						wordText = song.info.by;
+						bIsControlText = true;
 					}
 					else if (testText == "author")
 					{
 						wordText = song.info.author;
+						bIsControlText = true;
 					}
 					else if (testText == "description")
 					{
 						wordText = song.info.description;
+						bIsControlText = true;
 					}
 					else if (testText.startsWith("control:"))
 					{
 						wordText = testText.right(testText.length() - 8);
+						bIsControlText = true;
 					}
-					kw->setIsControlText(true);
+					if (bIsControlText)
+					{
+						kw->setIsControlText(true);
+					}
 				}
 				kw->setLyric(wordText);
 

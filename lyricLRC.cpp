@@ -100,18 +100,21 @@ bool LyricJson::loadLRC(const QString& path, const QString& musicPath)
 			_song.lyric.sentencelist.append(sentence);
 		}
 	}
+
+	KJsonSong songCopy = _song;
+
+	// first generate weak version
+	treatSentecesAsControl();
+	QString jsonPath = Settings::getInstance()->makeJsonPath(path, false);
+	exportToJson(jsonPath);
+
+	_song = songCopy;
+
 	lrcWordSeparate();
 
-	QFileInfo info(path);
-	QString strBase = info.absolutePath() + "/" + info.completeBaseName();
-	QString strJson = strBase + settings->jsonExtention;
-	exportToJson(strJson);
+	exportToASS(Settings::getInstance()->makeASSPath(path), musicPath);
 
-	exportToASS(strBase + ".ass", musicPath);
-
-	loadJson(strJson);
-	//	prepare();
-	return true;
+	return loadJson(jsonPath);
 }
 
 void LyricJson::lrcWordSeparate()
@@ -145,21 +148,7 @@ void LyricJson::lrcWordSeparate()
 
 		sentenceIt->wordlist.clear();
 
-		bool bControlWord = false;
-		if (text.startsWith("[") && text.endsWith("]"))
-		{
-			QString testText = text.mid(1, text.count() - 2);
-			if (testText == "title"
-				|| testText == "artist"
-				|| testText == "author"
-				|| testText == "album"
-				|| testText == "by"
-				|| testText == "description"
-				|| testText.startsWith("control:"))
-			{
-				bControlWord = true;
-			}
-		}
+		bool bControlWord = isControlOrInfoText(text);
 		if (bControlWord)
 		{
 			// build normal word

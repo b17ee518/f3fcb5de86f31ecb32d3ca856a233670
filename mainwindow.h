@@ -39,7 +39,7 @@ public:
 	bool loadLRC(const QString& path, const QString& musicPath);
 	bool loadASS(const QString& path);
 
-	void loadMusic(const QString& path);
+	void loadMusic(const QString& path, qint64 beginOffset);
 
 	qint64 playerPosition();
 	void setPlayerPosition(qint64 position);
@@ -49,6 +49,9 @@ protected:
 	void leaveEvent(QEvent *e) override;
 	void moveEvent(QMoveEvent *e) override;
 	void resizeEvent(QResizeEvent *e) override;
+
+	void showEvent(QShowEvent *e) override;
+	void closeEvent(QCloseEvent *e) override;
 	
 protected slots:
 	void updateTimeElapsedSlider(qint64 percent);
@@ -79,9 +82,18 @@ protected slots:
 	void slotOnPlayStopButtonToggled(bool bChecked);
 	void slotOnListButtonToggled(bool bChecked);
 
+	void slotOnMediaStatusChanged(QMediaPlayer::MediaStatus status);
+
 	void on_positionHorizontalSlider_sliderMoved(int position);
 	void on_volumeHorizontalSlider_sliderMoved(int position);
 
+private:
+	const qint64 slideInMS = 1000;
+	qreal _slideVol = 0.0;
+
+	qint64 _postOffset = 0;
+
+	bool _stopped = false;
 };
 
 #endif // MAINWINDOW_H

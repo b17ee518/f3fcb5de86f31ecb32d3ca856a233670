@@ -14,6 +14,7 @@
 #include <QMoveEvent>
 
 #include <QFileInfo>
+#include <QTimer>
 
 MainWindow* MainWindow::s_mainWindow = NULL;
 
@@ -27,8 +28,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
 	setMainWindow(this);
 
+	Settings::getInstance()->loadIni();
+
 	ui->setupUi(this);
-	setWindowFlags(windowFlags()  | Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+	setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
 	setAttribute(Qt::WA_TranslucentBackground);
 	this->setStyleSheet("background-color: rgba(0, 0, 0, 2);");
 
@@ -38,15 +41,18 @@ MainWindow::MainWindow(QWidget *parent) :
 	_player = new QMediaPlayer(this);
 	connect(_player, SIGNAL(positionChanged(qint64)), this, SLOT(updateTimeElapsedSlider(qint64)));
 	connect(_player, SIGNAL(durationChanged(qint64)), this, SLOT(setDuration(qint64)));
+	connect(_player, SIGNAL(mediaStatusChanged(QMediaPlayer::MediaStatus)), this, SLOT(slotOnMediaStatusChanged(QMediaPlayer::MediaStatus)));
 	connect(ui->positionSlider, SIGNAL(directJumped(int)), this, SLOT(on_positionHorizontalSlider_sliderMoved(int)));
 	connect(ui->volumeSlider, SIGNAL(directJumped(int)), this, SLOT(on_volumeHorizontalSlider_sliderMoved(int)));
 
-	setVolume(ui->volumeSlider->value());
+	setVolume(Settings::getInstance()->volume());
+
 	ui->lyricFrame->setMoveHandlingWidget(this);
 
 	resetPlayPauseState();
-	//
-	loadMusic("e:/Karaoke/temp/testLrc.mp3");
+
+	Settings::getInstance()->loadWindowPos(this);
+	loadMusic(Settings::getInstance()->lastPlayedFileName(), Settings::getInstance()->lastPlayedMS());
 }
 
 MainWindow::~MainWindow()
@@ -76,12 +82,15 @@ void MainWindow::togglePlayPause()
 
 void MainWindow::play()
 {
+	_stopped = false;
+
 	_player->play();
 	ui->lyricFrame->Play();
 
 	QIcon icon;
 	icon.addFile(QStringLiteral(ICONPATH_PAUSE), QSize(), QIcon::Normal, QIcon::Off);
 	ui->playPauseButton->setIcon(icon);
+	ui->playPauseButton->setChecked(true);
 }
 
 void MainWindow::pause()
@@ -94,6 +103,8 @@ void MainWindow::pause()
 
 void MainWindow::stop()
 {
+	_stopped = true;
+
 	_player->stop();
 	ui->lyricFrame->Stop();
 
@@ -149,8 +160,73 @@ bool MainWindow::loadASS(const QString& path)
 	return LyricJson::getInstance()->loadASS(path);
 }
 
-void MainWindow::loadMusic(const QString& path)
+void MainWindow::loadMusic(const QString& path, qint64 beginOffset)
 {
+	_player->setMedia(QUrl::fromLocalFile(path));
+
+	if (beginOffset != 0)
+	{
+		// slide volume in for 1000 ms
+
+		beginOffset -= slideInMS;
+		if (beginOffset < 0)
+		{
+			beginOffset = 0;
+		}
+		_player->setVolume(0);
+
+		QTimer* slideInTimer = new QTimer(this);
+		qreal subVol = (qreal)(Settings::getInstance()->volume() * 16) / slideInMS;
+		_slideVol = 0.0;
+		if (subVol > 0)
+		{
+			connect(slideInTimer, &QTimer::timeout, [this, slideInTimer, subVol]()
+			{
+				this->_slideVol += subVol;
+				int curVol = this->_slideVol;
+				if (curVol >= Settings::getInstance()->volume())
+				{
+					curVol = Settings::getInstance()->volume();
+					this->_slideVol = curVol;
+					slideInTimer->stop();
+					delete slideInTimer;
+					this->ui->volumeSlider->setValue(curVol);
+				}
+				_player->setVolume(curVol);
+			});
+			slideInTimer->start(16);
+		}
+
+		_postOffset = beginOffset;
+	}
+
+	// load lyric
+
+	auto settings = Settings::getInstance();
+	// if fixed json found then read fixed
+	QString fixedJsonPath = settings->makeJsonPath(path, true);
+	if (!loadJson(fixedJsonPath))
+	{
+		// if it's working file, delete working json
+		auto workingJsonPath = settings->makeJsonPath(path, false);
+		if (settings->isWorkingSong(path))
+		{
+			QFile::remove(workingJsonPath);
+		}
+		if (!loadJson(workingJsonPath))
+		{
+			if (!loadASS(settings->makeASSPath(path)))
+			{
+				if (!loadLRC(settings->makeLRCPath(path), path))
+				{
+					// no lrc
+				}
+			}
+		}
+	}
+
+	settings->setLastPlayedFileName(path);
+	/*
 	QFileInfo info(path);
 	QString strBase = info.absolutePath() + "/" + info.completeBaseName();
 	QString jsonName = strBase + Settings::getInstance()->jsonExtention;
@@ -169,8 +245,9 @@ void MainWindow::loadMusic(const QString& path)
 	{
 		loadJson(jsonName);
 	}
-	_player->setMedia(QUrl::fromLocalFile(path));
+	*/
 }
+
 
 qint64 MainWindow::playerPosition()
 {
@@ -204,6 +281,24 @@ void MainWindow::resizeEvent(QResizeEvent *e)
 {
 	QRect triedRect = QRect(this->pos(), e->size());
 	moveIntoScreen(triedRect);
+}
+
+void MainWindow::showEvent(QShowEvent *e)
+{
+}
+
+void MainWindow::closeEvent(QCloseEvent *e)
+{
+	auto settings = Settings::getInstance();
+	settings->setVolume(_player->volume());
+
+//	settings->setPlayMode()
+	
+	settings->setLastPlayedMS(_player->position());
+
+	settings->saveIni();
+	settings->saveWindowPos(this);
+	QMainWindow::closeEvent(e);
 }
 
 void MainWindow::moveIntoScreen(QRect triedRect)
@@ -300,19 +395,35 @@ void MainWindow::slotOnListButtonToggled(bool bChecked)
 
 }
 
+void MainWindow::slotOnMediaStatusChanged(QMediaPlayer::MediaStatus status)
+{
+	if (status == QMediaPlayer::MediaStatus::LoadedMedia)
+	{
+		if (_postOffset > 0)
+		{
+			_player->setPosition(_postOffset);
+			_postOffset = 0;
+		}
+		if (!_stopped)
+		{
+			play();
+		}
+	}
+}
+
 void MainWindow::on_positionHorizontalSlider_sliderMoved(int position)
 {
-	bool bPaused = isPaused();
-	qint64 oldPosition = playerPosition();
-	setPlayerPosition(position);
-
-	if (bPaused)
-	{
-		play();
-		pause();
-	}
 	if (!_bUpdatingPositionHorizontalSlider)
 	{
+		bool bPaused = isPaused();
+		qint64 oldPosition = playerPosition();
+		setPlayerPosition(position);
+
+		if (bPaused)
+		{
+			play();
+			pause();
+		}
 		ui->lyricFrame->Jumped(oldPosition);
 	}
 }

@@ -182,22 +182,7 @@ bool LyricJson::loadASS(const QString& path)
 				{
 					// it's a word
 					int textcount = text.count();
-					bool isControlText = false;
-					if (text.startsWith("[") && text.endsWith("]"))
-					{
-						QString testText = text.mid(1, textcount - 2);
-						if (testText == "title"
-							|| testText == "artist"
-							|| testText == "author"
-							|| testText == "album"
-							|| testText == "by"
-							|| testText == "description"
-							|| testText.startsWith("control:"))
-						{
-							isControlText = true;
-							// treat as single
-						}
-					}
+					bool isControlText = isControlOrInfoText(text);
 					if (layer == 0 && textcount > 1 && (!isControlText))
 					{
 						// separate to several
@@ -253,15 +238,10 @@ bool LyricJson::loadASS(const QString& path)
 
 	file.close();
 
+	QString jsonPath = Settings::getInstance()->makeJsonPath(path, false);
+	exportToJson(jsonPath);
 
-	QFileInfo info(path);
-	QString strBase = info.absolutePath() + "/" + info.completeBaseName();
-	QString strJson = strBase + Settings::getInstance()->jsonExtention;
-	exportToJson(strJson);
-
-	loadJson(strJson);
-
-	return false;
+	return loadJson(jsonPath);
 }
 
 void LyricJson::exportToASS(const QString& path, const QString& musicPath)

@@ -2,6 +2,15 @@
 
 #include <QString>
 #include <QObject>
+#include <QSettings>
+#include <QMainWindow>
+
+#define PLAYMODE_ALLLOOP			0
+#define PLAYMODE_SINGLELOOP	1
+#define PLAYMODE_SHUFFLE			2
+
+#define PLAYMODE_MIN	PLAYMODE_ALLLOOP
+#define PLAYMODE_MAX	PLAYMODE_SHUFFLE
 
 class Settings : QObject
 {
@@ -19,9 +28,21 @@ public:
 	}
 
 public:
+
+	void loadWindowPos(QMainWindow* w);
+	void saveWindowPos(QMainWindow* w);
+	void loadIni();
+	void saveIni();
+
 	void setFontSize(qreal fontSize);
 	void setFontSizeBySentenceHight(qreal height);
 	void setFont(const QString& fontName);
+
+	void setVolume(int vol);
+	void setPlayMode(int playmode);
+
+	void setLastPlayedFileName(const QString& path);
+	void setLastPlayedMS(int ms);
 
 	qreal minimumHeightForLine(int line);
 
@@ -39,6 +60,26 @@ public:
 
 	inline qreal minimumDuration(){ return lyricShortFadeTimeMS + lyricRestIntervalMS; }
 	inline qreal maximumDuration(){ return lyricEndSentenceTimeMS; }
+
+	inline int volume(){ return _volume; }
+	inline const QString& lastPlayedFileName(){ return _lastPlayedFileName; }
+	inline const QString& workingSongName(){ return _workingSongName; }
+	const qint64 lastPlayedMS();
+
+	inline qint64 visualOffset(){ return _visualOffset; }
+
+	// path
+	// Path = e:/music
+	// Song = e:/music/2015Su/some.mp3
+	// FixedJson = e:/music/lyric/some.json
+	// workingjson = e:/music/working/some.json
+
+	QString makeJsonPath(const QString& path, bool bFixed);
+	QString makeASSPath(const QString& path);
+	QString makeLRCPath(const QString& path);
+
+	bool isWorkingSong(const QString& path);
+	QString getSongName(const QString& path);
 
 public:
 	const qreal rubyFontScale = 0.35;
@@ -58,11 +99,19 @@ public:
 	const int lineMaxCharAspec = 25;
 
 	const char* jsonExtention = ".json";
-
+	
 private:
 	qreal _fontSize = standardFontSize;
 	QString _fontName = "Meiryo";
 
+	int _volume = 10;
+	QString _musicPath;
+	QString _workingSongName;
+
+	QString _lastPlayedFileName;
+	qint64 _lastPlayedMS = 0;
+	int _playMode = PLAYMODE_ALLLOOP;
+	qint64 _visualOffset = -250;
 
 signals:
 	void sigFontChanged();

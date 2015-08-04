@@ -215,6 +215,9 @@ public:
 private:
 	void prepare();
 
+	bool isControlOrInfoText(const QString& text);
+
+	void treatSentecesAsControl();
 	void lrcWordSeparate();
 	QString MStoTimeStr(qint64 msec);
 	qint64 TimeStrToMS(const QString& timestr);

@@ -30,7 +30,10 @@ bool LyricJson::loadJson(const QString& path)
 
 	QJsonObject  root = document.object();
 	_song.Clear();
-	_song.ReadFromJson(root);
+	if (!_song.ReadFromJson(root))
+	{
+		return false;
+	}
 	prepare();
 
 	return true;
@@ -51,6 +54,43 @@ void LyricJson::exportToJson(const QString& path)
 	stream.setGenerateByteOrderMark(true);
 	stream << doc.toJson(/*QJsonDocument::Compact*/);
 	file.close();
+}
+
+bool LyricJson::isControlOrInfoText(const QString& text)
+{
+	int textcount = text.count();
+	if (text.startsWith("[") && text.endsWith("]"))
+	{
+		QString testText = text.mid(1, textcount - 2);
+		if (testText == "title"
+			|| testText == "artist"
+			|| testText == "author"
+			|| testText == "album"
+			|| testText == "by"
+			|| testText == "description"
+			|| testText.startsWith("control:"))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void LyricJson::treatSentecesAsControl()
+{
+	for (int i = 0; i < _song.lyric.sentencelist.count(); i++)
+	{
+		if (_song.lyric.sentencelist[i].wordlist.count() != 1)
+		{
+			continue;
+		}
+		QString text = _song.lyric.sentencelist[i].wordlist.first().text;
+		if (!isControlOrInfoText(text))
+		{
+			text = "[control:" + text + "]";
+			_song.lyric.sentencelist[i].wordlist[0].text = text;
+		}
+	}
 }
 
 KJsonSentence LyricJson::buildEmptyLine(int lineNum)

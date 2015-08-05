@@ -15,6 +15,8 @@ public:
 	~KaraokeWord();
 
 	void setLyric(const QString& lyric);
+	void setTextColor(int colorIndex);
+	void setTextColor(const QColor& preTextColor, const QColor& postTextColor);
 	void setTextColor(const QColor& preTextColor, const QColor& preStrokeColor, const QColor& postTextColor, const QColor& postStrokeColor);
 	void setBeginEnd(qint64 beginMS, qint64 endMS);
 

@@ -169,6 +169,63 @@ public:
         positionSlider->setObjectName(QStringLiteral("positionSlider"));
         positionSlider->setMinimumSize(QSize(0, 24));
         positionSlider->setMaximumSize(QSize(16777215, 24));
+        positionSlider->setStyleSheet(QLatin1String("QSlider::groove:horizontal {\n"
+"border: 1px solid #bbb;\n"
+"background: white;\n"
+"height: 10px;\n"
+"border-radius: 4px;\n"
+"}\n"
+"\n"
+"QSlider::sub-page:horizontal {\n"
+"background: qlineargradient(x1: 0, y1: 0,    x2: 0, y2: 1,\n"
+"    stop: 0 #666, stop: 1 #bbb);\n"
+"background: qlineargradient(x1: 0, y1: 0.2, x2: 1, y2: 1,\n"
+"    stop: 0 #bbb, stop: 1 #555);\n"
+"border: 1px solid #777;\n"
+"height: 10px;\n"
+"border-radius: 4px;\n"
+"}\n"
+"\n"
+"QSlider::add-page:horizontal {\n"
+"background: #fff;\n"
+"border: 1px solid #777;\n"
+"height: 10px;\n"
+"border-radius: 4px;\n"
+"}\n"
+"\n"
+"QSlider::handle:horizontal {\n"
+"background: qlineargradient(x1:0, y1:0, x2:1, y2:1,\n"
+"    stop:0 #eee, stop:1 #ccc);\n"
+"border: 1px solid #777;\n"
+"width: 13px;\n"
+"margin-top: -3px;\n"
+"margin-bottom: -3px;\n"
+"border-radius: 4px;\n"
+"}\n"
+"\n"
+"QSlider::handle:horizontal:hover {\n"
+"background: qlineargradient(x1:0, y1:0, x2:1, y2:1,\n"
+"    stop:0 #fff, stop:1 #ddd);\n"
+"border: 1px solid #444;\n"
+"border-radius: 4px;\n"
+"}\n"
+""
+                        "\n"
+"QSlider::sub-page:horizontal:disabled {\n"
+"background: #bbb;\n"
+"border-color: #999;\n"
+"}\n"
+"\n"
+"QSlider::add-page:horizontal:disabled {\n"
+"background: #eee;\n"
+"border-color: #999;\n"
+"}\n"
+"\n"
+"QSlider::handle:horizontal:disabled {\n"
+"background: #eee;\n"
+"border: 1px solid #aaa;\n"
+"border-radius: 4px;\n"
+"}"));
         positionSlider->setOrientation(Qt::Horizontal);
 
         horizontalLayout->addWidget(positionSlider);
@@ -181,8 +238,9 @@ public:
         timeLabel->setObjectName(QStringLiteral("timeLabel"));
         sizePolicy.setHeightForWidth(timeLabel->sizePolicy().hasHeightForWidth());
         timeLabel->setSizePolicy(sizePolicy);
-        timeLabel->setMinimumSize(QSize(0, 24));
+        timeLabel->setMinimumSize(QSize(80, 24));
         timeLabel->setMaximumSize(QSize(16777215, 24));
+        timeLabel->setAlignment(Qt::AlignCenter);
 
         horizontalLayout->addWidget(timeLabel);
 
@@ -213,6 +271,63 @@ public:
         volumeSlider->setSizePolicy(sizePolicy1);
         volumeSlider->setMinimumSize(QSize(50, 24));
         volumeSlider->setMaximumSize(QSize(50, 24));
+        volumeSlider->setStyleSheet(QLatin1String("QSlider::groove:horizontal {\n"
+"border: 1px solid #bbb;\n"
+"background: white;\n"
+"height: 10px;\n"
+"border-radius: 4px;\n"
+"}\n"
+"\n"
+"QSlider::sub-page:horizontal {\n"
+"background: qlineargradient(x1: 0, y1: 0,    x2: 0, y2: 1,\n"
+"    stop: 0 #666, stop: 1 #bbb);\n"
+"background: qlineargradient(x1: 0, y1: 0.2, x2: 1, y2: 1,\n"
+"    stop: 0 #bbb, stop: 1 #555);\n"
+"border: 1px solid #777;\n"
+"height: 10px;\n"
+"border-radius: 4px;\n"
+"}\n"
+"\n"
+"QSlider::add-page:horizontal {\n"
+"background: #fff;\n"
+"border: 1px solid #777;\n"
+"height: 10px;\n"
+"border-radius: 4px;\n"
+"}\n"
+"\n"
+"QSlider::handle:horizontal {\n"
+"background: qlineargradient(x1:0, y1:0, x2:1, y2:1,\n"
+"    stop:0 #eee, stop:1 #ccc);\n"
+"border: 1px solid #777;\n"
+"width: 6px;\n"
+"margin-top: -4px;\n"
+"margin-bottom: -4px;\n"
+"border-radius: 4px;\n"
+"}\n"
+"\n"
+"QSlider::handle:horizontal:hover {\n"
+"background: qlineargradient(x1:0, y1:0, x2:1, y2:1,\n"
+"    stop:0 #fff, stop:1 #ddd);\n"
+"border: 1px solid #444;\n"
+"border-radius: 4px;\n"
+"}\n"
+""
+                        "\n"
+"QSlider::sub-page:horizontal:disabled {\n"
+"background: #bbb;\n"
+"border-color: #999;\n"
+"}\n"
+"\n"
+"QSlider::add-page:horizontal:disabled {\n"
+"background: #eee;\n"
+"border-color: #999;\n"
+"}\n"
+"\n"
+"QSlider::handle:horizontal:disabled {\n"
+"background: #eee;\n"
+"border: 1px solid #aaa;\n"
+"border-radius: 4px;\n"
+"}"));
         volumeSlider->setMaximum(100);
         volumeSlider->setValue(10);
         volumeSlider->setOrientation(Qt::Horizontal);
@@ -274,7 +389,7 @@ public:
         stopButton->setText(QString());
         previousButton->setText(QString());
         nextButton->setText(QString());
-        timeLabel->setText(QApplication::translate("MainWindow", "--:--/--:--", 0));
+        timeLabel->setText(QApplication::translate("MainWindow", "--:-- / --:--", 0));
         loopSwitchButton->setText(QString());
         closeButton->setText(QString());
     } // retranslateUi

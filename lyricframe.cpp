@@ -220,8 +220,10 @@ void LyricFrame::slotOnUpdateTimer()
 		}
 	}
 	// birth new
+	int lineindex = 0;
 	Q_FOREACH(auto sentence, song.lyric.sentencelist)
 	{
+		lineindex++;
 		if (curMS >= sentence.begin && sentence.begin > _previousMSec && curMS < sentence.end)
 		{
 			_sentences[sentence.line]->clearSentence();	// not needed
@@ -287,7 +289,7 @@ void LyricFrame::slotOnUpdateTimer()
 						kw->addRubyChar(ruby.text, ruby.begin, ruby.end);
 					}
 				}
-				//kw->setTextColor()
+				kw->setTextColor(word.color);
 				_sentences[sentence.line]->addWord(kw);
 				if (sentence.line < 2)
 				{

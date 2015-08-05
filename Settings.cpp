@@ -39,7 +39,7 @@ void Settings::loadIni()
 	int vol = settings.value("Volume").toInt();
 	setVolume(vol);
 	int playmode = settings.value("PlayMode").toInt();
-	setPlayMode(playmode);
+	setPlayMode((QMediaPlaylist::PlaybackMode)playmode);
 
 	_visualOffset = settings.value("VisualOffset").toLongLong();
 
@@ -62,7 +62,7 @@ void Settings::saveIni()
 	settings.beginGroup(SETTINGFILE_SETTINGGROUP);
 
 	settings.setValue("Volume", _volume);
-	settings.setValue("PlayMode", _playMode);
+	settings.setValue("PlayMode", (int)_playMode);
 
 //	settings.setValue("Path", _musicPath);		// never update
 
@@ -117,11 +117,13 @@ void Settings::setVolume(int vol)
 	_volume = vol;
 }
 
-void Settings::setPlayMode(int playmode)
+void Settings::setPlayMode(QMediaPlaylist::PlaybackMode playmode)
 {
-	if (playmode < PLAYMODE_MIN || playmode > PLAYMODE_MAX)
+	if (playmode != QMediaPlaylist::PlaybackMode::Loop
+		&& playmode != QMediaPlaylist::PlaybackMode::CurrentItemInLoop
+		&& playmode != QMediaPlaylist::PlaybackMode::Random)
 	{
-		playmode = PLAYMODE_ALLLOOP;
+		playmode = QMediaPlaylist::PlaybackMode::Loop;
 	}
 	_playMode = playmode;
 }
@@ -191,6 +193,31 @@ QString Settings::makeLRCPath(const QString& path)
 	QString retPath = _musicPath + "/working/";
 	retPath += getSongName(path) + ".lrc";
 	return retPath;
+}
+
+QString Settings::makePlaylistName(const QString& path)
+{
+	QFileInfo info(path);
+	QString filename = info.fileName();
+	if (info.isDir())
+	{
+		filename = "";
+	}
+
+	QFileInfo musicPathInfo(_musicPath);
+
+	QString ret = info.absoluteFilePath();
+	ret = ret.right(ret.length() - musicPathInfo.absoluteFilePath().length());
+	ret = ret.left(ret.length() - filename.length());
+	if (ret.startsWith("/"))
+	{
+		ret = ret.right(ret.length() - 1);
+	}
+	if (ret.endsWith("/"))
+	{
+		ret = ret.left(ret.length() - 1);
+	}
+	return ret;
 }
 
 bool Settings::isWorkingSong(const QString& path)

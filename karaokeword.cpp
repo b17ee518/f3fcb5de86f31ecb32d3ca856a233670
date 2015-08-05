@@ -44,6 +44,36 @@ void KaraokeWord::setTextColor(const QColor& preTextColor, const QColor& preStro
 	_postStrokeColor = postStrokeColor;
 }
 
+void KaraokeWord::setTextColor(const QColor& preTextColor, const QColor& postTextColor)
+{
+	setTextColor(preTextColor, Qt::black, postTextColor, Qt::white);
+}
+
+
+void KaraokeWord::setTextColor(int colorIndex)
+{
+	switch (colorIndex)
+	{
+	case 1:
+		setTextColor(QColor("#483d8b"), QColor("#9932cc"));
+		break;
+	case 2:
+		setTextColor(QColor("#997316"), QColor("#daa520"));
+		break;
+	case 3:
+		setTextColor(QColor("#124b12"), Qt::lightGray, QColor("#228b22"), Qt::white);
+//		setTextColor(Qt::darkCyan, QColor("#00ced1"));
+		break;
+	case 4:
+		setTextColor(QColor("#bd5e1b"), QColor("#ff8c00"));
+		break;
+
+	default:
+		setTextColor(Qt::white, Qt::red);
+		break;
+	}
+}
+
 void KaraokeWord::setBeginEnd(qint64 beginMS, qint64 endMS)
 {
 	_beginMS = beginMS;

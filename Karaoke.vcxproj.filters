@@ -142,6 +142,15 @@
     <ClCompile Include="GeneratedFiles\qrc_Resources.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="playlistwindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Debug\moc_playlistwindow.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="GeneratedFiles\Release\moc_playlistwindow.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="mainwindow.h">
@@ -171,6 +180,12 @@
     <CustomBuild Include="Resources.qrc">
       <Filter>Resources</Filter>
     </CustomBuild>
+    <CustomBuild Include="playlistwindow.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="playlistwindow.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="mainwindow.ui">
@@ -184,6 +199,9 @@
     <ClInclude Include="lyricJson.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_playlistwindow.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="Resources\play.png">
@@ -193,6 +211,30 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="Resources\stop.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\allloop.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\close.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\list.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\next.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\prev.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\setting.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\shuffle.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Resources\singleloop.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

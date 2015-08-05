@@ -15,12 +15,20 @@
 
 #include <QFileInfo>
 #include <QTimer>
+#include <QDirIterator>
+#include <QTime>
+
+#include <QShortcut>
 
 MainWindow* MainWindow::s_mainWindow = NULL;
 
 #define ICONPATH_PLAY	":/button/play"
 #define ICONPATH_PAUSE	":/button/pause"
 #define ICONPATH_STOP	":/button/stop"
+
+#define ICONPATH_ALLLOOP			":/button/allloop"
+#define ICONPATH_SINGLELOOP	":/button/singleloop"
+#define ICONPATH_SHUFFLE			":/button/shuffle"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -39,13 +47,12 @@ MainWindow::MainWindow(QWidget *parent) :
 	this->setMaximumSize(scrGeo.size());
 
 	_player = new QMediaPlayer(this);
-	connect(_player, SIGNAL(positionChanged(qint64)), this, SLOT(updateTimeElapsedSlider(qint64)));
-	connect(_player, SIGNAL(durationChanged(qint64)), this, SLOT(setDuration(qint64)));
+	connect(_player, SIGNAL(positionChanged(qint64)), this, SLOT(slotOnPlayerPositionChanged(qint64)));
+	connect(_player, SIGNAL(durationChanged(qint64)), this, SLOT(slotOnPlayerDurationChanged(qint64)));
 	connect(_player, SIGNAL(mediaStatusChanged(QMediaPlayer::MediaStatus)), this, SLOT(slotOnMediaStatusChanged(QMediaPlayer::MediaStatus)));
-	/*
-	connect(ui->positionSlider, SIGNAL(directJumped(int)), this, SLOT(on_positionHorizontalSlider_sliderMoved(int)));
-	connect(ui->volumeSlider, SIGNAL(directJumped(int)), this, SLOT(on_volumeHorizontalSlider_sliderMoved(int)));
-	*/
+
+	addShortcuts();
+
 	setVolume(Settings::getInstance()->volume());
 
 	ui->lyricFrame->setMoveHandlingWidget(this);
@@ -53,7 +60,16 @@ MainWindow::MainWindow(QWidget *parent) :
 	resetPlayPauseState();
 
 	Settings::getInstance()->loadWindowPos(this);
+	
+	setPlayMode(Settings::getInstance()->playMode());
+	reloadPlayList();
 	loadMusic(Settings::getInstance()->lastPlayedFileName(), Settings::getInstance()->lastPlayedMS());
+
+	_playlistWindow = new PlaylistWindow(this);
+//	_playlistWindow->show();
+	_playlistWindow->hide();
+
+	connect(this, SIGNAL(sigMusicLoaded(const QString&)), _playlistWindow, SLOT(slotOnMusicLoaded(const QString&)));
 }
 
 MainWindow::~MainWindow()
@@ -83,7 +99,7 @@ void MainWindow::togglePlayPause()
 
 void MainWindow::play()
 {
-	_stopped = false;
+	_stoppedByUser = false;
 
 	_player->play();
 	ui->lyricFrame->Play();
@@ -104,9 +120,12 @@ void MainWindow::pause()
 	resetPlayPauseState();
 }
 
-void MainWindow::stop()
+void MainWindow::stop(bool byUser/*=false*/)
 {
-	_stopped = true;
+	if (byUser)
+	{
+		_stoppedByUser = true;
+	}
 
 	_player->stop();
 	ui->lyricFrame->Stop();
@@ -167,7 +186,58 @@ bool MainWindow::loadASS(const QString& path)
 
 void MainWindow::loadMusic(const QString& path, qint64 beginOffset)
 {
-	_player->setMedia(QUrl::fromLocalFile(path));
+	QUrl url = QUrl::fromLocalFile(path);
+	int index = 0;
+	
+	QMediaPlaylist* asPl = NULL;
+	Q_FOREACH(auto pl, _playLists)
+	{
+		for (int i = 0; i < pl->mediaCount(); i++)
+		{
+			if (pl->media(i).canonicalUrl().matches(url, QUrl::None))
+			{
+				asPl = pl;
+				index = i;
+				break;
+			}
+		}
+		if (asPl)
+		{
+			break;
+		}
+	}
+
+	if (!asPl)
+	{
+		if (_playLists.size())
+		{
+			asPl = _playLists[0];
+		}
+	}
+
+	if (!asPl)
+	{
+		return;
+	}
+
+	if (_curPlayList != asPl)
+	{
+		if (_curPlayList)
+		{
+			stop();
+			delete _curPlayList;
+		}
+		_curPlayList = new QMediaPlaylist(this);
+		for (int i = 0; i < asPl->mediaCount(); i++)
+		{
+			_curPlayList->addMedia(asPl->media(i));
+		}
+	}
+	
+	_player->setPlaylist(_curPlayList);
+	_curPlayList->setPlaybackMode(_playmode);
+	_curPlayList->setCurrentIndex(index);
+//	_player->setMedia(QUrl::fromLocalFile(path));
 
 	if (beginOffset != 0)
 	{
@@ -204,56 +274,42 @@ void MainWindow::loadMusic(const QString& path, qint64 beginOffset)
 
 		_postOffset = beginOffset;
 	}
+}
 
-	// load lyric
 
-	auto settings = Settings::getInstance();
-	// if fixed json found then read fixed
-	QString fixedJsonPath = settings->makeJsonPath(path, true);
-	if (!loadJson(fixedJsonPath))
+void MainWindow::setPlayMode(QMediaPlaylist::PlaybackMode playmode)
+{
+	if (playmode == QMediaPlaylist::PlaybackMode::Loop)
 	{
-		// if it's working file, delete working json
-		auto workingJsonPath = settings->makeJsonPath(path, false);
-		if (settings->isWorkingSong(path))
-		{
-			QFile::remove(workingJsonPath);
-		}
-		if (!loadJson(workingJsonPath))
-		{
-			if (!loadASS(settings->makeASSPath(path)))
-			{
-				if (!loadLRC(settings->makeLRCPath(path), path))
-				{
-					// no lrc
-				}
-			}
-		}
+		QIcon icon;
+		icon.addFile(QStringLiteral(ICONPATH_ALLLOOP), QSize(), QIcon::Normal, QIcon::Off);
+		ui->loopSwitchButton->setIcon(icon);
 	}
-
-	settings->setLastPlayedFileName(path);
-	this->setWindowTitle(Settings::getInstance()->getSongName(path));
-	/*
-	QFileInfo info(path);
-	QString strBase = info.absolutePath() + "/" + info.completeBaseName();
-	QString jsonName = strBase + Settings::getInstance()->jsonExtention;
-	if (!QFile().exists(jsonName))
+	else if (playmode == QMediaPlaylist::PlaybackMode::CurrentItemInLoop)
 	{
-		if (QFile().exists(strBase+".ass"))
-		{
-			loadASS(strBase + ".ass");
-		}
-		else
-		{
-			loadLRC(strBase + ".lrc", path);
-		}
+		QIcon icon;
+		icon.addFile(QStringLiteral(ICONPATH_SINGLELOOP), QSize(), QIcon::Normal, QIcon::Off);
+		ui->loopSwitchButton->setIcon(icon);
+	}
+	else if (playmode == QMediaPlaylist::PlaybackMode::Random)
+	{
+		QIcon icon;
+		icon.addFile(QStringLiteral(ICONPATH_SHUFFLE), QSize(), QIcon::Normal, QIcon::Off);
+		ui->loopSwitchButton->setIcon(icon);
 	}
 	else
 	{
-		loadJson(jsonName);
+		setPlayMode(QMediaPlaylist::PlaybackMode::Loop);
+		return;
 	}
-	*/
-}
 
+	_playmode = playmode;
+	if (_curPlayList)
+	{
+		_curPlayList->setPlaybackMode(_playmode);
+	}
+	Settings::getInstance()->setPlayMode(_playmode);
+}
 
 qint64 MainWindow::playerPosition()
 {
@@ -263,6 +319,56 @@ qint64 MainWindow::playerPosition()
 void MainWindow::setPlayerPosition(qint64 position)
 {
 	_player->setPosition(position);
+}
+
+void MainWindow::reloadPlayList()
+{
+	// do not change cur
+	clearPlayList();
+	QString basePath = Settings::getInstance()->musicPath();
+	QDirIterator it(basePath, QDir::Dirs | QDir::NoSymLinks | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+	while (it.hasNext())
+	{
+		it.next();
+		QString subDir = it.filePath();
+
+		if (subDir.endsWith("/working") || subDir.endsWith("/lyric"))
+		{
+			continue;
+		}
+
+		QMediaPlaylist* pl = new QMediaPlaylist(this);
+		pl->setPlaybackMode(_playmode);
+
+		QDirIterator itFile(subDir, QDir::Files | QDir::NoSymLinks | QDir::NoDotAndDotDot);
+		while (itFile.hasNext())
+		{
+			itFile.next();
+			QString file = itFile.filePath();
+			pl->addMedia(QUrl::fromLocalFile(file));
+			pl->setCurrentIndex(0);
+			// currentIndexChanged(int position)
+		}
+		if (pl->mediaCount())
+		{
+			pl->setObjectName(Settings::getInstance()->makePlaylistName(subDir));
+			_playLists.append(pl);
+		}
+	}
+}
+
+void MainWindow::clearPlayList()
+{
+	Q_FOREACH(auto pl, _playLists)
+	{
+		delete pl;
+	}
+	_playLists.clear();
+}
+
+QString MainWindow::currentMusicPath()
+{
+	return _player->currentMedia().canonicalUrl().toLocalFile();
 }
 
 void MainWindow::enterEvent(QEvent *e)
@@ -281,6 +387,11 @@ void MainWindow::moveEvent(QMoveEvent *e)
 {
 	QRect triedRect = QRect(e->pos(), this->rect().size());
 	moveIntoScreen(triedRect);
+
+	if (!_playlistWindow->isHidden())
+	{
+		_playlistWindow->moveWithMainWindow();
+	}
 }
 
 void MainWindow::resizeEvent(QResizeEvent *e)
@@ -330,6 +441,10 @@ void MainWindow::moveIntoScreen(QRect triedRect)
 	{
 		moveY = scrGeo.bottom() - ptBottomRight.y();
 	}
+	if (triedRect.top() < 0)
+	{
+		moveY = scrGeo.top() - triedRect.top();
+	}
 	if (moveX != 0.0 || moveY != 0.0)
 	{
 		move(triedRect.left() + moveX, triedRect.top() + moveY);
@@ -337,16 +452,51 @@ void MainWindow::moveIntoScreen(QRect triedRect)
 }
 
 
-void MainWindow::updateTimeElapsedSlider(qint64 percent)
+void MainWindow::addShortcuts()
+{
+	QShortcut *listShortcut = new QShortcut(QKeySequence("Ctrl+L"), this);
+	listShortcut->setContext(Qt::ApplicationShortcut);
+	connect(listShortcut, SIGNAL(activated()), this, SLOT(slotOnListButtonToggled()));
+
+	QShortcut *playPauseShortcut = new QShortcut(QKeySequence("Space"), this);
+	playPauseShortcut->setContext(Qt::ApplicationShortcut);
+	connect(playPauseShortcut, SIGNAL(activated()), this, SLOT(slotOnPlayStopButtonToggled()));
+
+	QShortcut *stopShortcut = new QShortcut(QKeySequence("Ctrl+P"), this);
+	stopShortcut->setContext(Qt::ApplicationShortcut);
+	connect(stopShortcut, SIGNAL(activated()), this, SLOT(slotOnStopButtonClicked()));
+
+	QShortcut *nextShortcut = new QShortcut(QKeySequence("Ctrl+Right"), this);
+	nextShortcut->setContext(Qt::ApplicationShortcut);
+	connect(nextShortcut, SIGNAL(activated()), this, SLOT(slotOnNextButtonClicked()));
+
+	QShortcut *prevShortcut = new QShortcut(QKeySequence("Ctrl+Left"), this);
+	prevShortcut->setContext(Qt::ApplicationShortcut);
+	connect(prevShortcut, SIGNAL(activated()), this, SLOT(slotOnPreviousButtonClicked()));
+
+	QShortcut *closeShortcut = new QShortcut(QKeySequence("Escape"), this);
+	closeShortcut->setContext(Qt::ApplicationShortcut);
+	connect(closeShortcut, SIGNAL(activated()), this, SLOT(close()));
+}
+
+void MainWindow::slotOnPlayerPositionChanged(qint64 position)
 {
 	_bUpdatingPositionHorizontalSlider = true;
-	ui->positionSlider->setValue(percent);
+
+	// update time str
+	QTime curTime = QTime::fromMSecsSinceStartOfDay(position);
+	QTime durTime = QTime::fromMSecsSinceStartOfDay(_duration);
+	QString timeStr = curTime.toString("mm:ss") + " / " + durTime.toString("mm:ss");
+	ui->timeLabel->setText(timeStr);
+	ui->positionSlider->setValue(position);
+
 	_bUpdatingPositionHorizontalSlider = false;
 }
 
-void MainWindow::setDuration(qint64 duration)
+void MainWindow::slotOnPlayerDurationChanged(qint64 duration)
 {
 	ui->positionSlider->setMaximum(duration);
+	_duration = duration;
 }
 
 void MainWindow::slotOnCloseButtonClicked()
@@ -361,7 +511,20 @@ void MainWindow::slotOnVolumeSliderValueChanged(int value)
 
 void MainWindow::slotOnLoopSwitchButtonClicked()
 {
-
+	auto toPlayMode = _playmode;
+	if (_playmode == QMediaPlaylist::PlaybackMode::Loop)
+	{
+		toPlayMode = QMediaPlaylist::CurrentItemInLoop;
+	}
+	else if (_playmode == QMediaPlaylist::PlaybackMode::CurrentItemInLoop)
+	{
+		toPlayMode = QMediaPlaylist::Random;
+	}
+	else
+	{
+		toPlayMode = QMediaPlaylist::Loop;
+	}
+	setPlayMode(toPlayMode);
 }
 
 void MainWindow::slotOnPositionSliderValueChanged(int value)
@@ -371,17 +534,23 @@ void MainWindow::slotOnPositionSliderValueChanged(int value)
 
 void MainWindow::slotOnNextButtonClicked()
 {
-
+	if (_curPlayList)
+	{
+		_curPlayList->next();
+	}
 }
 
 void MainWindow::slotOnPreviousButtonClicked()
 {
-
+	if (_curPlayList)
+	{
+		_curPlayList->previous();
+	}
 }
 
 void MainWindow::slotOnStopButtonClicked()
 {
-	stop();
+	stop(true);
 }
 
 void MainWindow::slotOnPlayStopButtonToggled(bool bChecked)
@@ -396,21 +565,80 @@ void MainWindow::slotOnPlayStopButtonToggled(bool bChecked)
 	}
 }
 
+void MainWindow::slotOnPlayStopButtonToggled()
+{
+	ui->playPauseButton->toggle();
+//	slotOnPlayStopButtonToggled(!ui->playPauseButton->isChecked());
+}
+
 void MainWindow::slotOnListButtonToggled(bool bChecked)
 {
+	if (_playlistWindow->isHidden())
+	{
+		// reload
+		reloadPlayList();
+		_playlistWindow->show();
+		_playlistWindow->raise();
+	}
+	else
+	{
+		_playlistWindow->hide();
+	}
+}
 
+void MainWindow::slotOnListButtonToggled()
+{
+	ui->listButton->toggle();
+//	slotOnListButtonToggled(!ui->listButton->isChecked());
 }
 
 void MainWindow::slotOnMediaStatusChanged(QMediaPlayer::MediaStatus status)
 {
-	if (status == QMediaPlayer::MediaStatus::LoadedMedia)
+	if (status == QMediaPlayer::MediaStatus::LoadingMedia)
+	{
+		stop();
+		LyricJson::getInstance()->song().Clear();
+	}
+	else if (status == QMediaPlayer::MediaStatus::LoadedMedia)
 	{
 		if (_postOffset > 0)
 		{
 			_player->setPosition(_postOffset);
 			_postOffset = 0;
 		}
-		if (!_stopped)
+
+		// load lyric
+		auto path = _player->currentMedia().canonicalUrl().toLocalFile();
+		auto settings = Settings::getInstance();
+		// if fixed json found then read fixed
+		QString fixedJsonPath = settings->makeJsonPath(path, true);
+		if (!loadJson(fixedJsonPath))
+		{
+			// if it's working file, delete working json
+			auto workingJsonPath = settings->makeJsonPath(path, false);
+			if (settings->isWorkingSong(path))
+			{
+				QFile::remove(workingJsonPath);
+			}
+			if (!loadJson(workingJsonPath))
+			{
+				if (!loadASS(settings->makeASSPath(path)))
+				{
+					if (!loadLRC(settings->makeLRCPath(path), path))
+					{
+						// no lrc
+					}
+				}
+			}
+		}
+
+		ui->lyricFrame->setMaxSentences(LyricJson::getInstance()->song().general.maxline);
+		ui->lyricFrame->Jumped(std::numeric_limits<qint64>::min());
+		settings->setLastPlayedFileName(path);
+		this->setWindowTitle(Settings::getInstance()->getSongName(path));
+
+		emit sigMusicLoaded(path);
+		if (!_stoppedByUser)
 		{
 			play();
 		}

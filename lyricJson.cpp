@@ -103,21 +103,6 @@ KJsonSentence LyricJson::buildEmptyLine(int lineNum)
 
 QString KJsonBase::subTextForElem(const QJsonObject & elem, const QString& name)
 {
-	/*
-	auto elements = elem.elementsByTagName(name);
-	if (!elements.count())
-	{
-		return "";
-	}
-	for (int i = 0; i < elements.count(); i++)
-	{
-		if (elements.at(i).parentNode() == elem)
-		{
-			return elements.at(i).toElement().text();
-		}
-	}
-	return "";
-	*/
 	if (elem.contains(name))
 	{
 		return elem[name].toString();
@@ -125,16 +110,23 @@ QString KJsonBase::subTextForElem(const QJsonObject & elem, const QString& name)
 	return "";
 }
 
+qint64 KJsonBase::subInt64ForElem(const QJsonObject & elem, const QString& name, qint64 def)
+{
+	if (elem.contains(name))
+	{
+		return elem[name].toDouble();
+	}
+	return def;
+}
+
 void KJsonBase::addTextToElem(QJsonObject & elem, const QString& name, const QString& text)
 {
 	elem[name] = text;
-	/*
-	QDomDocument doc = elem.ownerDocument();
-	QJsonObject  node = doc.createElement(name);
-	QDomText textDom = doc.createTextNode(text);
-	node.appendChild(textDom);
-	elem.appendChild(node);
-	*/
+}
+
+void KJsonBase::addInt64ToElem(QJsonObject & elem, const QString& name, qint64 value)
+{
+	elem[name] = value;
 }
 
 bool KJsonInfo::ReadFromJson(const QJsonObject & elem)
@@ -179,42 +171,26 @@ void KJsonInfo::Export(QJsonObject & elem)
 
 bool KJsonGeneral::ReadFromJson(const QJsonObject & elem)
 {
-	auto maxlineText = subTextForElem(elem, "maxline");
-	if (!maxlineText.isEmpty())
-	{
-		maxline = maxlineText.toInt();
-	}
-	auto offsetText = subTextForElem(elem, "offset");
-	if (!offsetText.isEmpty())
-	{
-		offset = offsetText.toLongLong();
-	}
+	maxline = subInt64ForElem(elem, "maxline", maxline);
+	offset = subInt64ForElem(elem, "offset", offset);
 
 	return true;
 }
 
 void KJsonGeneral::Export(QJsonObject & elem)
 {
-	addTextToElem(elem, "maxline", QString::number(maxline));
+	addInt64ToElem(elem, "maxline", maxline);
 	if (offset != 0)
 	{
-		addTextToElem(elem, "offset", QString::number(offset));
+		addInt64ToElem(elem, "offset", offset);
 	}
 }
 
 bool KJsonRuby::ReadFromJson(const QJsonObject & elem)
 {
 	text = subTextForElem(elem, "text");
-	auto beginText = subTextForElem(elem, "begin");
-	if (!beginText.isEmpty())
-	{
-		begin = beginText.toLongLong();
-	}
-	auto endText = subTextForElem(elem, "end");
-	if (!endText.isEmpty())
-	{
-		end = endText.toLongLong();
-	}
+	begin = subInt64ForElem(elem, "begin", begin);
+	end = subInt64ForElem(elem, "end", end);
 
 	return true;
 }
@@ -224,37 +200,21 @@ void KJsonRuby::Export(QJsonObject & elem)
 	addTextToElem(elem, "text", text);
 	if (begin >= 0)
 	{
-		addTextToElem(elem, "begin", QString::number(begin));
+		addInt64ToElem(elem, "begin", begin);
 	}
 	if (end >= 0)
 	{
-		addTextToElem(elem, "end", QString::number(end));
+		addInt64ToElem(elem, "end", end);
 	}
 }
 
 bool KJsonWord::ReadFromJson(const QJsonObject & elem)
 {
 	text = subTextForElem(elem, "text");
-	auto colorText = subTextForElem(elem, "color");
-	if (!colorText.isEmpty())
-	{
-		color = colorText.toInt();
-	}
-	auto beginText = subTextForElem(elem, "begin");
-	if (!beginText.isEmpty())
-	{
-		begin = beginText.toLongLong();
-	}
-	auto endText = subTextForElem(elem, "end");
-	if (!endText.isEmpty())
-	{
-		end = endText.toLongLong();
-	}
-	auto rubyhiddenText = subTextForElem(elem, "rubyhidden");
-	if (!rubyhiddenText.isEmpty())
-	{
-		rubyhidden = rubyhiddenText.toInt();
-	}
+	color = subInt64ForElem(elem, "color", color);
+	begin = subInt64ForElem(elem, "begin", begin);
+	end = subInt64ForElem(elem, "end", end);
+	rubyhidden = subInt64ForElem(elem, "rubyhidden", rubyhidden);
 	auto rubies = elem["ruby"];
 	if (rubies.isArray())
 	{
@@ -275,19 +235,19 @@ void KJsonWord::Export(QJsonObject & elem)
 	addTextToElem(elem, "text", text);
 	if (color >= 0)
 	{
-		addTextToElem(elem, "color", QString::number(color));
+		addInt64ToElem(elem, "color", color);
 	}
 	if (begin >= 0)
 	{
-		addTextToElem(elem, "begin", QString::number(begin));
+		addInt64ToElem(elem, "begin", begin);
 	}
 	if (end >= 0)
 	{
-		addTextToElem(elem, "end", QString::number(end));
+		addInt64ToElem(elem, "end", end);
 	}
 	if (rubyhidden > 0)
 	{
-		addTextToElem(elem, "rubyhidden", QString::number(rubyhidden));
+		addInt64ToElem(elem, "rubyhidden", rubyhidden);
 	}
 
 	QJsonArray rubyArray;
@@ -305,26 +265,10 @@ void KJsonWord::Export(QJsonObject & elem)
 
 bool KJsonSentence::ReadFromJson(const QJsonObject & elem)
 {
-	auto lineText = subTextForElem(elem, "line");
-	if (!lineText.isEmpty())
-	{
-		line = lineText.toInt();
-	}
-	auto colorText = subTextForElem(elem, "color");
-	if (!colorText.isEmpty())
-	{
-		color = colorText.toInt();
-	}
-	auto beginText = subTextForElem(elem, "begin");
-	if (!beginText.isEmpty())
-	{
-		begin = beginText.toLongLong();
-	}
-	auto endText = subTextForElem(elem, "end");
-	if (!endText.isEmpty())
-	{
-		end = endText.toLongLong();
-	}
+	line = subInt64ForElem(elem, "line", line);
+	color = subInt64ForElem(elem, "color", color);
+	begin = subInt64ForElem(elem, "begin", begin);
+	end = subInt64ForElem(elem, "end", end);
 
 	normaltext = subTextForElem(elem, "normaltext");
 	rubiedtext = subTextForElem(elem, "rubiedtext");
@@ -348,19 +292,19 @@ void KJsonSentence::Export(QJsonObject & elem)
 {
 	if (line >= 0)
 	{
-		addTextToElem(elem, "line", QString::number(line));
+		addInt64ToElem(elem, "line", line);
 	}
 	if (color >= 0)
 	{
-		addTextToElem(elem, "color", QString::number(color));
+		addInt64ToElem(elem, "color", color);
 	}
 	if (begin >= 0)
 	{
-		addTextToElem(elem, "begin", QString::number(begin));
+		addInt64ToElem(elem, "begin", begin);
 	}
 	if (end >= 0)
 	{
-		addTextToElem(elem, "end", QString::number(end));
+		addInt64ToElem(elem, "end", end);
 	}
 
 	if (!normaltext.isEmpty())

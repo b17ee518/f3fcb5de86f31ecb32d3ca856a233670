@@ -4,13 +4,7 @@
 #include <QObject>
 #include <QSettings>
 #include <QMainWindow>
-
-#define PLAYMODE_ALLLOOP			0
-#define PLAYMODE_SINGLELOOP	1
-#define PLAYMODE_SHUFFLE			2
-
-#define PLAYMODE_MIN	PLAYMODE_ALLLOOP
-#define PLAYMODE_MAX	PLAYMODE_SHUFFLE
+#include <QMediaPlaylist>
 
 class Settings : QObject
 {
@@ -39,7 +33,7 @@ public:
 	void setFont(const QString& fontName);
 
 	void setVolume(int vol);
-	void setPlayMode(int playmode);
+	void setPlayMode(QMediaPlaylist::PlaybackMode playmode);
 
 	void setLastPlayedFileName(const QString& path);
 	void setLastPlayedMS(int ms);
@@ -61,12 +55,16 @@ public:
 	inline qreal minimumDuration(){ return lyricShortFadeTimeMS + lyricRestIntervalMS; }
 	inline qreal maximumDuration(){ return lyricEndSentenceTimeMS; }
 
+	inline const QString& musicPath(){ return _musicPath; }
+
 	inline int volume(){ return _volume; }
 	inline const QString& lastPlayedFileName(){ return _lastPlayedFileName; }
 	inline const QString& workingSongName(){ return _workingSongName; }
 	const qint64 lastPlayedMS();
 
 	inline qint64 visualOffset(){ return _visualOffset; }
+
+	inline QMediaPlaylist::PlaybackMode playMode(){ return _playMode; }
 
 	// path
 	// Path = e:/music
@@ -77,6 +75,7 @@ public:
 	QString makeJsonPath(const QString& path, bool bFixed);
 	QString makeASSPath(const QString& path);
 	QString makeLRCPath(const QString& path);
+	QString makePlaylistName(const QString& path);
 
 	bool isWorkingSong(const QString& path);
 	QString getSongName(const QString& path);
@@ -110,7 +109,7 @@ private:
 
 	QString _lastPlayedFileName;
 	qint64 _lastPlayedMS = 0;
-	int _playMode = PLAYMODE_ALLLOOP;
+	QMediaPlaylist::PlaybackMode _playMode = QMediaPlaylist::PlaybackMode::Loop;
 	qint64 _visualOffset = -250;
 
 signals:

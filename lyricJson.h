@@ -18,7 +18,10 @@ public:
 
 public:
 	QString subTextForElem(const QJsonObject & elem, const QString& name);
+	qint64 subInt64ForElem(const QJsonObject & elem, const QString& name, qint64 def);
+
 	void addTextToElem(QJsonObject & elem, const QString& name, const QString& text);
+	void addInt64ToElem(QJsonObject & elem, const QString& name, qint64 value);
 };
 
 class KJsonInfo : KJsonBase
@@ -207,7 +210,7 @@ public:
 	bool loadLRC(const QString& path, const QString& musicPath);
 	bool loadASS(const QString& path);
 
-	inline const KJsonSong song(){ return _song; }
+	inline KJsonSong& song(){ return _song; }
 
 	void exportToJson(const QString& path);
 	void exportToASS(const QString& path, const QString& musicPath);

@@ -3,6 +3,9 @@
 
 #include <QMainWindow>
 #include <QMediaPlayer>
+#include <QMediaPlaylist>
+
+#include "playlistwindow.h"
 
 namespace Ui {
 class MainWindow;
@@ -23,7 +26,7 @@ public:
 	void togglePlayPause();
 	void play();
 	void pause();
-	void stop();
+	void stop(bool byUser=false);
 
 	void resetPlayPauseState();
 
@@ -41,8 +44,18 @@ public:
 
 	void loadMusic(const QString& path, qint64 beginOffset);
 
+	void setPlayMode(QMediaPlaylist::PlaybackMode playmode);
+
 	qint64 playerPosition();
 	void setPlayerPosition(qint64 position);
+
+	void reloadPlayList();
+	void clearPlayList();
+	
+	QString currentMusicPath();
+
+public:
+	inline const QList<QMediaPlaylist*>& playLists(){ return _playLists; }
 
 protected:
 	void enterEvent(QEvent *e) override;
@@ -54,11 +67,12 @@ protected:
 	void closeEvent(QCloseEvent *e) override;
 	
 protected slots:
-	void updateTimeElapsedSlider(qint64 percent);
-	void setDuration(qint64 duration);
+	void slotOnPlayerPositionChanged(qint64 position);
+	void slotOnPlayerDurationChanged(qint64 duration);
 	
 private:
 	void moveIntoScreen(QRect triedRect);
+	void addShortcuts();
 
 private:
     Ui::MainWindow *ui;
@@ -79,7 +93,9 @@ protected slots:
 	void slotOnNextButtonClicked();
 	void slotOnPreviousButtonClicked();
 	void slotOnStopButtonClicked();
+	void slotOnPlayStopButtonToggled();
 	void slotOnPlayStopButtonToggled(bool bChecked);
+	void slotOnListButtonToggled();
 	void slotOnListButtonToggled(bool bChecked);
 
 	void slotOnMediaStatusChanged(QMediaPlayer::MediaStatus status);
@@ -87,13 +103,24 @@ protected slots:
 	void on_positionHorizontalSlider_sliderMoved(int position);
 	void on_volumeHorizontalSlider_sliderMoved(int position);
 
+signals:
+	void sigMusicLoaded(const QString& path);
+
 private:
 	const qint64 slideInMS = 1000;
 	qreal _slideVol = 0.0;
 
 	qint64 _postOffset = 0;
+	qint64 _duration = 0;
 
-	bool _stopped = false;
+	bool _stoppedByUser = false;
+
+	QMediaPlaylist::PlaybackMode _playmode = QMediaPlaylist::PlaybackMode::Loop;
+
+	QList<QMediaPlaylist*> _playLists;
+	QMediaPlaylist* _curPlayList = NULL;
+
+	PlaylistWindow * _playlistWindow = NULL;
 };
 
 #endif // MAINWINDOW_H

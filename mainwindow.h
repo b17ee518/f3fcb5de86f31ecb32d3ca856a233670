@@ -51,6 +51,8 @@ public:
 
 	void reloadPlayList();
 	void clearPlayList();
+
+	void loadLyric(const QString& path);
 	
 	QString currentMusicPath();
 
@@ -65,6 +67,8 @@ protected:
 
 	void showEvent(QShowEvent *e) override;
 	void closeEvent(QCloseEvent *e) override;
+
+	void wheelEvent(QWheelEvent *e) override;
 	
 protected slots:
 	void slotOnPlayerPositionChanged(qint64 position);
@@ -102,6 +106,8 @@ protected slots:
 
 	void on_positionHorizontalSlider_sliderMoved(int position);
 	void on_volumeHorizontalSlider_sliderMoved(int position);
+
+	void slotOnReloadLyric();
 
 signals:
 	void sigMusicLoaded(const QString& path);

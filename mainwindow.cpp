@@ -19,6 +19,7 @@
 #include <QTime>
 
 #include <QShortcut>
+#include <QWheelEvent>
 
 MainWindow* MainWindow::s_mainWindow = NULL;
 
@@ -152,6 +153,9 @@ bool MainWindow::isPaused()
 void MainWindow::setVolume(int vol)
 {
 	_player->setVolume(vol);
+	ui->volumeSlider->blockSignals(true);
+	ui->volumeSlider->setValue(vol);
+	ui->volumeSlider->blockSignals(false);
 }
 
 void MainWindow::jumpToPosition(qint64 msec)
@@ -366,6 +370,38 @@ void MainWindow::clearPlayList()
 	_playLists.clear();
 }
 
+void MainWindow::loadLyric(const QString& path)
+{
+	// load lyric
+	auto settings = Settings::getInstance();
+	// if fixed json found then read fixed
+	QString fixedJsonPath = settings->makeJsonPath(path, true);
+	if (!loadJson(fixedJsonPath))
+	{
+		// if it's working file, delete working json
+		auto workingJsonPath = settings->makeJsonPath(path, false);
+		if (settings->isWorkingSong(path))
+		{
+			QFile::remove(workingJsonPath);
+		}
+		if (!loadJson(workingJsonPath))
+		{
+			if (!loadASS(settings->makeASSPath(path)))
+			{
+				if (!loadLRC(settings->makeLRCPath(path), path))
+				{
+					// no lrc
+				}
+			}
+		}
+	}
+
+	ui->lyricFrame->setMaxSentences(LyricJson::getInstance()->song().general.maxline);
+	ui->lyricFrame->Jumped(std::numeric_limits<qint64>::min());
+	settings->setLastPlayedFileName(path);
+	this->setWindowTitle(Settings::getInstance()->getSongName(path));
+}
+
 QString MainWindow::currentMusicPath()
 {
 	return _player->currentMedia().canonicalUrl().toLocalFile();
@@ -416,6 +452,16 @@ void MainWindow::closeEvent(QCloseEvent *e)
 	settings->saveIni();
 	settings->saveWindowPos(this);
 	QMainWindow::closeEvent(e);
+}
+
+void MainWindow::wheelEvent(QWheelEvent *e)
+{
+	if (e->orientation() == Qt::Vertical)
+	{
+		int delta = e->delta();
+		int vol = _player->volume();
+		setVolume(vol + delta/24);
+	}
 }
 
 void MainWindow::moveIntoScreen(QRect triedRect)
@@ -477,6 +523,10 @@ void MainWindow::addShortcuts()
 	QShortcut *closeShortcut = new QShortcut(QKeySequence("Escape"), this);
 	closeShortcut->setContext(Qt::ApplicationShortcut);
 	connect(closeShortcut, SIGNAL(activated()), this, SLOT(close()));
+
+	QShortcut *reloadLyricShortcut = new QShortcut(QKeySequence("Ctrl+\\"), this);
+	reloadLyricShortcut->setContext(Qt::ApplicationShortcut);
+	connect(reloadLyricShortcut, SIGNAL(activated()), this, SLOT(slotOnReloadLyric()));
 }
 
 void MainWindow::slotOnPlayerPositionChanged(qint64 position)
@@ -607,35 +657,8 @@ void MainWindow::slotOnMediaStatusChanged(QMediaPlayer::MediaStatus status)
 			_postOffset = 0;
 		}
 
-		// load lyric
 		auto path = _player->currentMedia().canonicalUrl().toLocalFile();
-		auto settings = Settings::getInstance();
-		// if fixed json found then read fixed
-		QString fixedJsonPath = settings->makeJsonPath(path, true);
-		if (!loadJson(fixedJsonPath))
-		{
-			// if it's working file, delete working json
-			auto workingJsonPath = settings->makeJsonPath(path, false);
-			if (settings->isWorkingSong(path))
-			{
-				QFile::remove(workingJsonPath);
-			}
-			if (!loadJson(workingJsonPath))
-			{
-				if (!loadASS(settings->makeASSPath(path)))
-				{
-					if (!loadLRC(settings->makeLRCPath(path), path))
-					{
-						// no lrc
-					}
-				}
-			}
-		}
-
-		ui->lyricFrame->setMaxSentences(LyricJson::getInstance()->song().general.maxline);
-		ui->lyricFrame->Jumped(std::numeric_limits<qint64>::min());
-		settings->setLastPlayedFileName(path);
-		this->setWindowTitle(Settings::getInstance()->getSongName(path));
+		loadLyric(path);
 
 		emit sigMusicLoaded(path);
 		if (!_stoppedByUser)
@@ -673,4 +696,10 @@ void MainWindow::on_positionHorizontalSlider_sliderMoved(int position)
 void MainWindow::on_volumeHorizontalSlider_sliderMoved(int position)
 {
 	setVolume(position);
+}
+
+void MainWindow::slotOnReloadLyric()
+{
+	auto path = _player->currentMedia().canonicalUrl().toLocalFile();
+	loadLyric(path);
 }

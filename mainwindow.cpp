@@ -8,7 +8,6 @@
 
 #include "LyricJson.h"
 #include "Settings.h"
-#include <QGraphicsVideoItem>
 #include <QGraphicsView>
 #include <QDesktopWidget>
 #include <QMoveEvent>
